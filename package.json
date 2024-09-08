@@ -1,0 +1,32 @@
+{
+  "name": "@aidc-toolkit/dev",
+  "version": "0.0.1",
+  "description": "Shared development artefacts for AIDC Toolkit",
+  "type": "module",
+  "main": "dist/index.js",
+  "homepage": "https://github.com/aidc-toolkit",
+  "repository": "github:aidc-toolkit/dev",
+  "bugs": {
+    "url": "https://github.com/aidc-toolkit/dev/issues"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "Kevin Dean",
+    "email": "Kevin.Dean@datadevelopment.com",
+    "url": "https://www.linkedin.com/in/kdean"
+  },
+  "scripts": {
+    "eslint": "eslint .",
+    "build": "tsup src/index.ts --format cjs,esm --dts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.10.0",
+    "@stylistic/eslint-plugin": "^2.7.2",
+    "eslint-config-love": "^64.0.0",
+    "eslint-plugin-jsdoc": "^50.2.2",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.2.4",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.4.0"
+  }
+}
