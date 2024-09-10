@@ -6,6 +6,9 @@ import esLintConfigLove from "eslint-config-love";
 import { esLintConfigAIDCToolkit } from "./dist/index.js";
 
 export default tseslint.config(
+    {
+        ignores: ["eslint.config.js", "dist"]
+    },
     js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
     stylistic.configs["recommended-flat"],

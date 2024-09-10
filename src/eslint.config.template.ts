@@ -54,6 +54,12 @@ export const esLintConfigAIDCToolkit: ConfigWithExtends = {
         }],
         "@stylistic/object-property-newline": "error",
 
+        "jsdoc/require-description": ["warn", {
+            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration"]
+        }],
+        "jsdoc/require-jsdoc": ["warn", {
+            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration"]
+        }],
         "jsdoc/require-returns": ["warn", {
             checkGetters: false
         }],

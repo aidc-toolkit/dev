@@ -31,6 +31,9 @@ import esLintConfigLove from "eslint-config-love";
 import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
 
 export default tseslint.config(
+    {
+        ignores: ["eslint.config.js", "dist"]
+    },
     js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
     stylistic.configs["recommended-flat"],
