@@ -17,7 +17,7 @@
     "forceConsistentCasingInFileNames": true,
 
     // Language and environment.
-    "target": "es2020",
+    "target": "esnext",
     "useDefineForClassFields": true,
 
     // Completeness.
