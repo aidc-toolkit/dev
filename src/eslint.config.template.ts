@@ -18,6 +18,7 @@ export const esLintConfigAIDCToolkit: ConfigWithExtends = {
         "@typescript-eslint/max-params": "off",
         "@typescript-eslint/no-empty-function": "off",
         "@typescript-eslint/no-empty-object-type": "off",
+        "@typescript-eslint/no-magic-numbers": "off",
         "@typescript-eslint/no-unnecessary-type-parameters": "off",
         "@typescript-eslint/unbound-method": ["error", {
             ignoreStatic: true
@@ -55,10 +56,10 @@ export const esLintConfigAIDCToolkit: ConfigWithExtends = {
         "@stylistic/object-property-newline": "error",
 
         "jsdoc/require-description": ["warn", {
-            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration"]
+            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
         }],
         "jsdoc/require-jsdoc": ["warn", {
-            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration"]
+            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
         }],
         "jsdoc/require-returns": ["warn", {
             checkGetters: false
