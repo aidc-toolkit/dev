@@ -20,6 +20,7 @@ export const esLintConfigAIDCToolkit: ConfigWithExtends = {
         "@typescript-eslint/no-empty-object-type": "off",
         "@typescript-eslint/no-magic-numbers": "off",
         "@typescript-eslint/no-unnecessary-type-parameters": "off",
+        "@typescript-eslint/prefer-destructuring": "off",
         "@typescript-eslint/unbound-method": ["error", {
             ignoreStatic: true
         }],
