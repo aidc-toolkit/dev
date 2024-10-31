@@ -24,17 +24,12 @@ declaring their own `eslint.config.js` file as follows:
 
 ```javascript
 import tseslint from "typescript-eslint";
-import js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import jsdoc from "eslint-plugin-jsdoc";
 import esLintConfigLove from "eslint-config-love";
 import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
 
 export default tseslint.config(
-    {
-        ignores: ["eslint.config.js", "dist"]
-    },
-    js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
     stylistic.configs["recommended-flat"],
     jsdoc.configs["flat/recommended-typescript"],
@@ -45,7 +40,6 @@ export default tseslint.config(
 
 The ESLint configuration requires the installation of the following development dependencies:
 
-- @eslint/js
 - @stylistic/eslint-plugin
 - eslint-config-love
 - eslint-plugin-jsdoc
