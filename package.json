@@ -23,13 +23,13 @@
     "build": "tsup src/index.ts --format cjs,esm --dts"
   },
   "devDependencies": {
-    "@eslint/js": "^9.13.0",
-    "@stylistic/eslint-plugin": "^2.10.0",
-    "eslint-config-love": "^96.0.0",
+    "@eslint/js": "^9.14.0",
+    "@stylistic/eslint-plugin": "^2.10.1",
+    "eslint-config-love": "^97.0.0",
     "eslint-plugin-jsdoc": "^50.4.3",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.5",
     "typescript": "^5.6.3",
-    "typescript-eslint": "^8.12.2"
+    "typescript-eslint": "^8.13.0"
   }
 }
