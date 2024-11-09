@@ -88,5 +88,14 @@ export const esLintConfigAIDCToolkit: ConfigWithExtends[] = [
                 startLines: 1
             }]
         }
+    },
+    {
+        files: [
+            "test/**/*"
+        ],
+        rules: {
+            "jsdoc/require-jsdoc": "off",
+            "@typescript-eslint/dot-notation": "off"
+        }
     }
 ];
