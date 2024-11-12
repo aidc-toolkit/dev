@@ -6,7 +6,7 @@ a development dependency.
 ## TypeScript Configuration
 
 All AIDC Toolkit packages are expected to be built the same way, which implies that they all have the same TypeScript
-configuration. This is supported by the [`tsconfig.json` file](tsconfig.json) in this package. All changes should be managed
+configuration. This is supported by the [`tsconfig.json` file](tsconfig.json) in this package. Core changes should be managed
 in that file, with other packages declaring their own `tsconfig.json` as follows:
 
 ```json
@@ -15,32 +15,36 @@ in that file, with other packages declaring their own `tsconfig.json` as follows
 }
 ```
 
+Options specific to the package may override or supplement core options if required.
+
 ## ESLint Configuration
 
 All AIDC Toolkit packages are expected to follow a common coding style (enforced by [ESLint](https://eslint.org/)),
 which implies that they all have the same ESLint configuration. This is supported by the [`eslint.config.template.ts`
-file](src/eslint.config.template.ts) in this package. All changes should be managed in that file, with other packages
+file](src/eslint.config.template.ts) in this package. Core changes should be managed in that file, with other packages
 declaring their own `eslint.config.js` file as follows:
 
 ```javascript
-import tseslint from "typescript-eslint";
-import stylistic from "@stylistic/eslint-plugin";
-import jsdoc from "eslint-plugin-jsdoc";
-import esLintConfigLove from "eslint-config-love";
 import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
 
+export default esLintConfigAIDCToolkit;
+```
+
+Rules specific to the package may override or supplement core rules if required. If so, the `eslint.config.js` file
+should be declared as follows:
+
+```javascript
+import tseslint from "typescript-eslint";
+import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
+// Additional imports here as required.
+// ...
+
 export default tseslint.config(
-    ...tseslint.configs.strictTypeChecked,
-    stylistic.configs["recommended-flat"],
-    jsdoc.configs["flat/recommended-typescript"],
-    esLintConfigLove,
-    esLintConfigAIDCToolkit
+    ...esLintConfigAIDCToolkit,
+    // Additional rules here as required.
+    // ...
 );
 ```
 
-The ESLint configuration requires the installation of the following development dependencies:
-
-- @stylistic/eslint-plugin
-- eslint-config-love
-- eslint-plugin-jsdoc
-- typescript-eslint
+ESLint requires the installation of the `eslint` package as a development dependency. Other development dependencies may
+be required if overriding or supplementing the core rules.

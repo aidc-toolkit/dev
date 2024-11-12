@@ -1,11 +1,18 @@
 import js from "@eslint/js";
-import type { ConfigWithExtends } from "typescript-eslint";
+import stylistic from "@stylistic/eslint-plugin";
+import esLintConfigLove from "eslint-config-love";
+import jsdoc from "eslint-plugin-jsdoc";
+import tseslint from "typescript-eslint";
 
-export const esLintConfigAIDCToolkit: ConfigWithExtends[] = [
+export const esLintConfigAIDCToolkit = tseslint.config(
     {
         ignores: ["eslint.config.js", "dist"]
     },
     js.configs.recommended,
+    ...tseslint.configs.strictTypeChecked,
+    stylistic.configs["recommended-flat"],
+    jsdoc.configs["flat/recommended-typescript"],
+    esLintConfigLove,
     {
         languageOptions: {
             parserOptions: {
@@ -98,4 +105,4 @@ export const esLintConfigAIDCToolkit: ConfigWithExtends[] = [
             "@typescript-eslint/dot-notation": "off"
         }
     }
-];
+);
