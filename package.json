@@ -21,7 +21,7 @@
   "scripts": {
     "eslint": "eslint .",
     "build": "tsup src/index.ts --format cjs,esm --dts",
-    "build-dev": "npm run build"
+    "build-doc": "npm run build"
   },
   "devDependencies": {
     "eslint": "^9.14.0",
