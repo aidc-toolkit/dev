@@ -65,7 +65,6 @@ export const esLintConfigAIDCToolkit = tseslint.config(
                     delimiter: "semi"
                 }
             }],
-            "@stylistic/no-trailing-spaces": ["warn"],
             "@stylistic/operator-linebreak": ["error", "after"],
             "@stylistic/quotes": ["error", "double"],
             "@stylistic/semi": ["error", "always"],
