@@ -48,13 +48,10 @@ runs:
         
         if [ "${{ inputs.unlink_projects }}" != "" ]
         then
-          echo "Got here"
-        
           # Unlink all dependency projects.
           for unlink_project in ${{ inputs.unlink_projects }}
           do
-            echo Unlinking $unlink_project
-            npm unlink @aidc-toolkit/$unlink_project
+            npm unlink --no-save @aidc-toolkit/$unlink_project
           done
   
           # Removing package-lock.json will force download of dependencies.
@@ -67,13 +64,6 @@ runs:
         # (https://github.com/npm/cli/issues/4828).
         npm install @rollup/rollup-linux-x64-gnu
 
-    - name: Start terminal session (pre build)
-      if: inputs.terminal_pre_build == 'true'
-      uses: mxschmitt/action-tmate@v3
-
-    - name: Build ${{ inputs.project }}
-      shell: bash
-      run: |
         # All projects have build script.
         npm run build
 
