@@ -1,3 +1,4 @@
+# This action requires that project be checked out.
 name: Build project and publish to NPM
 
 inputs:
@@ -29,9 +30,6 @@ runs:
       with:
         node-version: ${{ inputs.node_version }}
         registry-url: https://registry.npmjs.org/
-
-    - name: Checkout
-      uses: actions/checkout@v4
 
     - name: Start terminal session (pre build)
       if: inputs.terminal_pre_build == 'true'
