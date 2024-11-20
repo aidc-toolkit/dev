@@ -14,7 +14,7 @@ jobs:
         uses: aidc-toolkit/dev/.github/actions/build-publish@main
         with:
           project: dev
-          node_version: ${{ secrets.NODE_VERSION }}
+          node_version: ${{ vars.NODE_VERSION }}
           node_auth_token: ${{ secrets.NODE_AUTH_TOKEN }}
           no_test: true
           terminal_pre_build: ${{ vars.TERMINAL_PRE_BUILD }}
