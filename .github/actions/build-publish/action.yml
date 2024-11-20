@@ -40,7 +40,7 @@ runs:
       if: inputs.terminal_pre_build == 'true'
       uses: mxschmitt/action-tmate@v3
 
-    - name: Build ${{ inputs.project }}
+    - name: BuildX ${{ inputs.project }}
       shell: bash
       run: |
         # Clean install.
@@ -48,9 +48,12 @@ runs:
         
         if [ "${{ inputs.unlink_projects }}" != "" ]
         then
+          echo "Got here"
+        
           # Unlink all dependency projects.
           for unlink_project in ${{ inputs.unlink_projects }}
           do
+            echo Unlinking $unlink_project
             npm unlink @aidc-toolkit/$unlink_project
           done
   
@@ -64,6 +67,13 @@ runs:
         # (https://github.com/npm/cli/issues/4828).
         npm install @rollup/rollup-linux-x64-gnu
 
+    - name: Start terminal session (pre build)
+      if: inputs.terminal_pre_build == 'true'
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Build ${{ inputs.project }}
+      shell: bash
+      run: |
         # All projects have build script.
         npm run build
 
