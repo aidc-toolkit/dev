@@ -61,7 +61,7 @@ runs:
       shell: bash
       run: |
         # Project must have test script.
-        npm test
+        npm run test
 
     - name: Publish ${{ inputs.project }}
       # Publish is valid only as part of release.
