@@ -1,0 +1,33 @@
+name: Build and publish
+
+on:
+  release:
+    types:
+      - published
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Clean install
+        run: |
+          npm ci
+
+      - name: Build and publish dev
+        uses: ./.github/actions/build-publish
+        with:
+          project: dev
+          no_test: true
