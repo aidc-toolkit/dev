@@ -1,28 +1,38 @@
-# This action requires that Node be installed, project be checked out, and "npm ci" be run before calling.
-# For more information see https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages.
 name: Build project and publish to NPM
 
 inputs:
   project:
     description: Project to be built and published
     required: true
+  node_version:
+    description: Node version
+    required: true
+  node_auth_token:
+    description: Node authentication token for publishing to NPM
+    required: true
   no_test:
     description: If true, test is not run
     required: false
-  node_auth_token:
-    description: If provided, project is published to NPM
-    required: false
   terminal_pre_build:
-    description: If true, a terminal session is opened before the build step is run
+    description: If true, terminal session is started before build step is run
     required: false
   terminal_post_build:
-    description: If true, a terminal session is opened after the build step is run
+    description: If true, terminal session is started after build step is run
     required: false
 
 runs:
   using: composite
 
   steps:
+    - name: Setup node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node_version }}
+        registry-url: https://registry.npmjs.org/
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
     - name: Start terminal session (pre build)
       if: inputs.terminal_pre_build == 'true'
       uses: mxschmitt/action-tmate@v3
@@ -30,6 +40,9 @@ runs:
     - name: Build ${{ inputs.project }}
       shell: bash
       run: |
+        # Clean install.
+        npm ci
+        
         # This is necessary to work around platform-specific optional dependencies bug
         # (https://github.com/npm/cli/issues/4828).
         npm install @rollup/rollup-linux-x64-gnu
@@ -50,7 +63,7 @@ runs:
 
     - name: Publish ${{ inputs.project }}
       # Publish is valid only as part of release.
-      if: github.event_name == 'release' && inputs.npm_token != null
+      if: github.event_name == 'release'
       shell: bash
       env:
         NODE_AUTH_TOKEN: ${{ inputs.node_auth_token }}
