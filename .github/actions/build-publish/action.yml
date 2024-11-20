@@ -4,9 +4,6 @@ inputs:
   project:
     description: Project to be built and published
     required: true
-  unlink_projects:
-    description: List of projects to be unlinked
-    required: false
   node_version:
     description: Node version
     required: true
@@ -40,26 +37,14 @@ runs:
       if: inputs.terminal_pre_build == 'true'
       uses: mxschmitt/action-tmate@v3
 
-    - name: BuildX ${{ inputs.project }}
+    - name: Build ${{ inputs.project }}
       shell: bash
       run: |
-        # Clean install.
-        npm ci
+        # Removing package-lock.json is necessary to force download of all dependencies including linked dependencies.
+        rm package-lock.json
         
-        if [ "${{ inputs.unlink_projects }}" != "" ]
-        then
-          # Unlink all dependency projects.
-          for unlink_project in ${{ inputs.unlink_projects }}
-          do
-            npm unlink --no-save @aidc-toolkit/$unlink_project
-          done
-  
-          # Removing package-lock.json will force download of dependencies.
-          rm package-lock.json
-
-          npm install
-        fi
-
+        npm install
+        
         # This is necessary to work around platform-specific optional dependencies bug
         # (https://github.com/npm/cli/issues/4828).
         npm install @rollup/rollup-linux-x64-gnu
