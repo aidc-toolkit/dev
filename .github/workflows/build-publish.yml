@@ -31,3 +31,6 @@ jobs:
         with:
           project: dev
           no_test: true
+          node_auth_token: ${{ secrets.NODE_AUTH_TOKEN }}
+          terminal_pre_build: ${{ vars.TERMINAL_PRE_BUILD }}
+          terminal_post_build: ${{ vars.TERMINAL_POST_BUILD }}

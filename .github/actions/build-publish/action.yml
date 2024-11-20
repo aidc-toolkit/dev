@@ -9,32 +9,22 @@ inputs:
   no_test:
     description: If true, test is not run
     required: false
-  no_publish:
-    description: If true, publish is not run
+  node_auth_token:
+    description: If provided, project is published to NPM
+    required: false
+  terminal_pre_build:
+    description: If true, a terminal session is opened before the build step is run
+    required: false
+  terminal_post_build:
+    description: If true, a terminal session is opened after the build step is run
     required: false
 
 runs:
   using: composite
 
   steps:
-    - name: Dump vars
-      if: vars.DUMP_VARS == 'true'
-      shell: bash
-      run: |
-        cat << EOF
-        ${{ toJSON(vars) }}
-        EOF
-
-    - name: Dump GitHub context
-      if: vars.DUMP_GITHUB_CONTEXT == 'true'
-      shell: bash
-      run: |
-        cat << EOF
-        ${{ toJSON(github) }}
-        EOF
-
     - name: Start terminal session (pre build)
-      if: vars.TERMINAL_PRE_BUILD == 'true'
+      if: inputs.terminal_pre_build == 'true'
       uses: mxschmitt/action-tmate@v3
 
     - name: Build ${{ inputs.project }}
@@ -48,7 +38,7 @@ runs:
         npm run build
 
     - name: Start terminal session (post build)
-      if: vars.TERMINAL_POST_BUILD == 'true'
+      if: inputs.terminal_post_build == 'true'
       uses: mxschmitt/action-tmate@v3
 
     - name: Test ${{ inputs.project }}
@@ -60,9 +50,9 @@ runs:
 
     - name: Publish ${{ inputs.project }}
       # Publish is valid only as part of release.
-      if: github.event_name == 'release' && inputs.no_publish != 'true'
+      if: github.event_name == 'release' && inputs.npm_token != null
       shell: bash
       env:
-        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        NODE_AUTH_TOKEN: ${{ inputs.node_auth_token }}
       run: |
         npm publish --access public
