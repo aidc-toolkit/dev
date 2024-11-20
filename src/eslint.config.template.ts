@@ -102,7 +102,8 @@ export const esLintConfigAIDCToolkit = tseslint.config(
         ],
         rules: {
             "jsdoc/require-jsdoc": "off",
-            "@typescript-eslint/dot-notation": "off"
+            "@typescript-eslint/dot-notation": "off",
+            "@typescript-eslint/no-unsafe-type-assertion": "off"
         }
     }
 );
