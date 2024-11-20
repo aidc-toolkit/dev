@@ -13,14 +13,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout actions
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            .github/actions
-
       - name: Build and publish dev
-        uses: ./.github/actions/build-publish
+        uses: aidc-toolkit/dev/.github/actions/build-publish@main
         with:
           project: dev
           node_version: ${{ secrets.NODE_VERSION }}
