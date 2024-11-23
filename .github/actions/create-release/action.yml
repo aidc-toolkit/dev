@@ -15,6 +15,20 @@ runs:
   steps:
     - name: Checkout
       uses: actions/checkout@v4
+      with:
+        ref: ${{ github.ref_name }}
+
+    - name: Test secret 1
+      if: contains(fromJSON(inputs.secrets).GITHUB_TOKEN, '*')
+      shell: bash
+      run: |
+        exit 1
+
+    - name: Test secret 3
+      if: contains(fromJSON(inputs.secrets).GITHUB_TOKEN, '***')
+      shell: bash
+      run: |
+        exit 1
 
     - name: Release
       uses: actions/create-release@latest
