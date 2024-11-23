@@ -1,0 +1,14 @@
+name: Tag
+
+on:
+  push:
+    tags:
+      # Tags are in semantic versioning format.
+      - 'v*.*.*'
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: aidc-toolkit/dev/.github/actions/create-release@main

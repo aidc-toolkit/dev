@@ -1,0 +1,19 @@
+name: Create release
+description: Create a release for a version tag
+
+runs:
+  using: composite
+
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Release
+      uses: actions/create-release@latest
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: true
+        prerelease: contains(${{ github.ref }}, '-')
