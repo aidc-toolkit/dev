@@ -48,7 +48,6 @@ runs:
     - name: Test
       shell: bash
       run: |
-        # Project must have test script.
         # Not all projects have test script.
         npm run test --if-present
 
