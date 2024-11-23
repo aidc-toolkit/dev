@@ -52,10 +52,13 @@ runs:
         npm run test --if-present
 
     - name: Publish
-      # Publish is valid only as part of release.
-      if: github.event_name == 'release'
+      # Publish is valid only for release publication.
+      if: github.event_name == 'release' && github.event.action == 'published'
       shell: bash
       env:
         NODE_AUTH_TOKEN: ${{ fromJSON(inputs.secrets).NODE_AUTH_TOKEN }}
       run: |
+        # Create .npmignore to exclude hidden directories.
+        echo /.\*/ > .npmignore
+        
         npm publish --access public
