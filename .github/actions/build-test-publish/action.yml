@@ -1,24 +1,13 @@
-name: Build project and publish to NPM
+name: Build, test, publish
+description: Build, optionally test, and optionally publish to NPM
 
 inputs:
-  project:
-    description: Project to be built and published
+  secrets:
+    description: JSON representation of workflow secrets object
     required: true
-  node_version:
-    description: Node version
+  vars:
+    description: JSON representation of workflow vars object
     required: true
-  node_auth_token:
-    description: Node authentication token for publishing to NPM
-    required: true
-  no_test:
-    description: If true, test is not run
-    required: false
-  terminal_pre_build:
-    description: If true, terminal session is started before build step is run
-    required: false
-  terminal_post_build:
-    description: If true, terminal session is started after build step is run
-    required: false
 
 runs:
   using: composite
@@ -27,17 +16,17 @@ runs:
     - name: Setup node
       uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.node_version }}
+        node-version: ${{ fromJSON(inputs.vars).NODE_VERSION }}
         registry-url: https://registry.npmjs.org/
 
     - name: Checkout
       uses: actions/checkout@v4
 
     - name: Start terminal session (pre build)
-      if: inputs.terminal_pre_build == 'true'
+      if: fromJSON(inputs.vars).TERMINAL_PRE_BUILD == 'true'
       uses: mxschmitt/action-tmate@v3
 
-    - name: Build ${{ inputs.project }}
+    - name: Build
       shell: bash
       run: |
         # Removing package-lock.json is necessary to force download of all dependencies including linked dependencies.
@@ -53,21 +42,21 @@ runs:
         npm run build
 
     - name: Start terminal session (post build)
-      if: inputs.terminal_post_build == 'true'
+      if: fromJSON(inputs.vars).TERMINAL_POST_BUILD == 'true'
       uses: mxschmitt/action-tmate@v3
 
-    - name: Test ${{ inputs.project }}
-      if: inputs.no_test != 'true'
+    - name: Test
       shell: bash
       run: |
         # Project must have test script.
-        npm run test
+        # Not all projects have test script.
+        npm run test --if-present
 
-    - name: Publish ${{ inputs.project }}
+    - name: Publish
       # Publish is valid only as part of release.
       if: github.event_name == 'release'
       shell: bash
       env:
-        NODE_AUTH_TOKEN: ${{ inputs.node_auth_token }}
+        NODE_AUTH_TOKEN: ${{ fromJSON(inputs.secrets).NODE_AUTH_TOKEN }}
       run: |
         npm publish --access public
