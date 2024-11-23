@@ -13,6 +13,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Dump GitHub context
+        run: |
+          cat << EOF
+          ${{ toJSON(github) }}
+          EOF
+
       - uses: aidc-toolkit/dev/.github/actions/build-test-publish@main
         with:
           secrets: ${{ toJSON(secrets) }}
