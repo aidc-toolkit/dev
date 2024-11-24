@@ -1,0 +1,40 @@
+{
+  "copyFiles": [
+    {
+      "from": ".github/workflows/tag.yml",
+      "to": "../core/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/tag.yml",
+      "to": "../utility/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/tag.yml",
+      "to": "../gs1/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/tag.yml",
+      "to": "../demo/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/tag.yml",
+      "to": "../doc/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/release.yml",
+      "to": "../core/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/release.yml",
+      "to": "../utility/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/release.yml",
+      "to": "../gs1/.github/workflows/"
+    }
+  ],
+
+  "copyFilesSettings": {
+    "whenFileExists": "overwrite"
+  }
+}

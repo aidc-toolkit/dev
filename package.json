@@ -19,11 +19,13 @@
     "url": "https://www.linkedin.com/in/kdean"
   },
   "scripts": {
+    "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "eslint": "eslint .",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "build-doc": "npm run build"
   },
   "devDependencies": {
+    "copy-files-from-to": "^3.12.0",
     "eslint": "^9.15.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.5",
