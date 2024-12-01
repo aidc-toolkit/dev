@@ -25,6 +25,7 @@ export const esLintConfigAIDCToolkit = tseslint.config(
         },
 
         rules: {
+            "complexity": "off",
             "no-dupe-class-members": "off",
             "no-redeclare": "off",
             "no-unused-vars": "off",
