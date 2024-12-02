@@ -21,6 +21,7 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint .",
+    "publish": "tsx src/publish.ts",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "build-doc": "npm run build"
   },
@@ -29,6 +30,7 @@
     "eslint": "^9.16.0",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
   "peerDependencies": {
