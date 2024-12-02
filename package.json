@@ -21,7 +21,7 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint .",
-    "publish": "tsx src/publish.ts",
+    "release": "tsx src/release.ts",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "build-doc": "npm run build"
   },

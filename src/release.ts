@@ -4,11 +4,11 @@ import * as path from "node:path";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 
-import configurationJSON from "../config/publish.json" assert { type: "json" };
-import secureConfigurationJSON from "../config/publish.secure.json" assert { type: "json" };
+import configurationJSON from "../config/release.json" assert { type: "json" };
+import secureConfigurationJSON from "../config/release.secure.json" assert { type: "json" };
 
 /**
- * Configuration layout of publish.json.
+ * Configuration layout of release.json.
  */
 interface Configuration {
     /**
@@ -38,7 +38,7 @@ interface Configuration {
 }
 
 /**
- * Configuration layout of publish.secure.json.
+ * Configuration layout of release.secure.json.
  */
 interface SecureConfiguration {
     token: string;
@@ -138,23 +138,23 @@ function run(captureOutput: boolean, command: string, ...args: string[]): string
 }
 
 /**
- * Publish.
+ * Release.
  */
-async function publish(): Promise<void> {
-    const statePath = path.resolve("config/publish.state.json");
+async function release(): Promise<void> {
+    const statePath = path.resolve("config/release.state.json");
 
-    let repositoryStates: Record<string, string | undefined> = {};
+    let state: Record<string, string | undefined> = {};
 
     if (fs.existsSync(statePath)) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Format is controlled by this process.
-        repositoryStates = JSON.parse(fs.readFileSync(statePath).toString());
+        state = JSON.parse(fs.readFileSync(statePath).toString());
     }
 
     /**
      * Save the current state.
      */
     function saveState(): void {
-        fs.writeFileSync(statePath, `${JSON.stringify(repositoryStates, null, 2)}\n`);
+        fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`);
     }
 
     /**
@@ -163,7 +163,7 @@ async function publish(): Promise<void> {
      * @param name
      * Repository name.
      *
-     * @param state
+     * @param stepState
      * State at which step takes place.
      *
      * @param callback
@@ -172,11 +172,11 @@ async function publish(): Promise<void> {
      * @returns
      * Promise.
      */
-    async function step(name: string, state: string, callback: () => (void | Promise<void>)): Promise<void> {
-        const repositoryState = repositoryStates[name];
+    async function step(name: string, stepState: string, callback: () => (void | Promise<void>)): Promise<void> {
+        const repositoryState = state[name];
 
-        if (repositoryState === undefined || repositoryState === state) {
-            repositoryStates[name] = state;
+        if (repositoryState === undefined || repositoryState === stepState) {
+            state[name] = stepState;
 
             try {
                 const result = callback();
@@ -185,16 +185,16 @@ async function publish(): Promise<void> {
                     await result;
                 }
 
-                repositoryStates[name] = undefined;
+                state[name] = undefined;
             } finally {
-                fs.writeFileSync(statePath, `${JSON.stringify(repositoryStates, null, 2)}\n`);
+                fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`);
             }
         }
     }
 
     const octokit = new Octokit({
         auth: secureConfiguration.token,
-        userAgent: `${configuration.organization} publisher`
+        userAgent: `${configuration.organization} release`
     });
 
     for (const name of Object.keys(configuration.repositories)) {
@@ -211,7 +211,7 @@ async function publish(): Promise<void> {
         }
 
         // Repository must be fully committed except for untracked files.
-        if (!(configuration.ignoreUncommitted ?? false) && repositoryStates[name] === undefined && run(true, "git", "status", "--short", "--untracked-files=no").length !== 0) {
+        if (!(configuration.ignoreUncommitted ?? false) && state[name] === undefined && run(true, "git", "status", "--short", "--untracked-files=no").length !== 0) {
             throw new Error("Repository has uncommitted changes");
         }
 
@@ -297,7 +297,7 @@ async function publish(): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Package configuration format is known.
         const packageConfiguration: PackageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString());
 
-        const skipRepository = repositoryStates[name] === undefined && packageConfiguration.version === repository.version;
+        const skipRepository = state[name] === undefined && packageConfiguration.version === repository.version;
 
         if (packageConfiguration.version !== repository.version) {
             packageConfiguration.version = repository.version;
@@ -369,15 +369,15 @@ async function publish(): Promise<void> {
                 });
             });
 
-            repositoryStates[name] = "complete";
+            state[name] = "complete";
             saveState();
         }
     }
 
-    repositoryStates = {};
+    state = {};
     saveState();
 }
 
-await publish().catch((e: unknown) => {
+await release().catch((e: unknown) => {
     console.error(e);
 });
