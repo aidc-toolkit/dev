@@ -358,7 +358,8 @@ async function release(): Promise<void> {
                         ...octokitParameterBase,
                         tag_name: tag,
                         name: `${prerelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)} r` : "R"}elease ${versionSplit[0]}`,
-                        prerelease
+                        // TODO Remove "false" override.
+                        prerelease: false
                     });
                 });
             }).then(async () => {
