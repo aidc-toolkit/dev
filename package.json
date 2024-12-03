@@ -33,9 +33,6 @@
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   },
-  "peerDependencies": {
-    "eslint": ">=9"
-  },
   "dependencies": {
     "@eslint/js": "^9.16.0",
     "@octokit/types": "^13.6.2",
@@ -43,7 +40,7 @@
     "eslint-config-love": "^109.0.0",
     "eslint-plugin-jsdoc": "^50.6.0",
     "octokit": "^4.0.2",
-    "typescript-eslint": "^8.16.0",
+    "typescript-eslint": "^8.17.0",
     "yaml": "^2.6.1"
   }
 }
