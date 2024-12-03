@@ -57,6 +57,11 @@ interface PackageConfiguration {
     version: string;
 
     /**
+     * If true, package is private and not linked by others.
+     */
+    private?: boolean;
+
+    /**
      * Development dependencies.
      */
     devDependencies?: Record<string, string>;
@@ -187,7 +192,7 @@ async function release(): Promise<void> {
 
                 state[name] = undefined;
             } finally {
-                fs.writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`);
+                saveState();
             }
         }
     }
@@ -215,26 +220,6 @@ async function release(): Promise<void> {
             throw new Error("Repository has uncommitted changes");
         }
 
-        const workflowsPath = ".github/workflows/";
-
-        let hasPushWorkflow = false;
-        let hasReleaseWorkflow = false;
-
-        for (const workflowFile of fs.readdirSync(workflowsPath)) {
-            if (workflowFile.endsWith(".yml")) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Workflow configuration format is known.
-                const workflowOn = (yamlParse(fs.readFileSync(path.resolve(workflowsPath, workflowFile)).toString()) as WorkflowConfiguration).on;
-
-                if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("main"))) {
-                    hasPushWorkflow = true;
-                }
-
-                if (workflowOn.release !== undefined && (workflowOn.release.types === undefined || workflowOn.release.types.includes("published"))) {
-                    hasReleaseWorkflow = true;
-                }
-            }
-        }
-
         const tag = `v${repository.version}`;
 
         const octokitParameterBase = {
@@ -242,141 +227,190 @@ async function release(): Promise<void> {
             repo: name
         };
 
-        const commitSHA = run(true, "git", "rev-parse", "HEAD")[0];
-
-        /**
-         * Validate the workflow by waiting for it to complete.
-         */
-        async function validateWorkflow(): Promise<void> {
-            while (!await new Promise<void>((resolve) => {
-                setTimeout(resolve, 2000);
-            }).then(async () => await octokit.rest.actions.listWorkflowRunsForRepo({
-                ...octokitParameterBase,
-                head_sha: commitSHA
-            })).then((response) => {
-                let workflowRunID = -1;
-
-                let queryCount = 0;
-                let completed = false;
-
-                for (const workflowRun of response.data.workflow_runs) {
-                    if (workflowRun.status !== "completed") {
-                        if (workflowRun.id === workflowRunID) {
-                            process.stdout.write(".");
-                        } else if (workflowRunID === -1) {
-                            workflowRunID = workflowRun.id;
-
-                            console.log(`Workflow run ID ${workflowRunID}`);
-                        } else {
-                            throw new Error(`Parallel workflow runs for SHA ${commitSHA}`);
-                        }
-                    } else if (workflowRun.id === workflowRunID) {
-                        process.stdout.write("\n");
-
-                        if (workflowRun.conclusion !== "success") {
-                            throw new Error(`Workflow ${workflowRun.conclusion}`);
-                        }
-
-                        completed = true;
-                    }
-                }
-
-                // Abort if workflow run not started after 10 queries.
-                if (++queryCount === 10 && workflowRunID === -1) {
-                    throw new Error(`Workflow run not started for SHA ${commitSHA}`);
-                }
-
-                return completed;
-            })) {
-                // Execution within conditional.
-            }
-        }
-
         const packageConfigurationPath = "package.json";
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Package configuration format is known.
         const packageConfiguration: PackageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString());
 
-        const skipRepository = state[name] === undefined && packageConfiguration.version === repository.version;
+        let skipRepository = state[name] === "complete";
 
-        if (packageConfiguration.version !== repository.version) {
-            packageConfiguration.version = repository.version;
+        if (!skipRepository) {
+            if (packageConfiguration.version !== repository.version) {
+                packageConfiguration.version = repository.version;
 
-            const atOrganization = `@${configuration.organization}/`;
+                const atOrganization = `@${configuration.organization}`;
 
-            /**
-             * Update dependencies from the organization.
-             *
-             * @param dependencies
-             * Dependencies.
-             */
-            function updateDependencies(dependencies: Record<string, string> | undefined): void {
-                if (dependencies !== undefined) {
-                    for (const dependency in dependencies) {
-                        const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
+                /**
+                 * Update dependencies from the organization.
+                 *
+                 * @param dependencies
+                 * Dependencies.
+                 *
+                 * @returns
+                 * List of dependencies that require linking.
+                 */
+                function updateDependencies(dependencies: Record<string, string> | undefined): string[] {
+                    const linkDependencies = new Array<string>();
 
-                        if (dependencyAtOrganization === atOrganization) {
-                            dependencies[dependency] = `^${configuration.repositories[dependencyRepositoryName].version}`;
+                    if (dependencies !== undefined) {
+                        for (const dependency in dependencies) {
+                            const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
+
+                            if (dependencyAtOrganization === atOrganization) {
+                                dependencies[dependency] = `^${configuration.repositories[dependencyRepositoryName].version}`;
+
+                                linkDependencies.push(dependency);
+                            }
+                        }
+                    }
+
+                    return linkDependencies;
+                }
+
+                const linkDependencies = updateDependencies(packageConfiguration.devDependencies);
+                linkDependencies.push(...updateDependencies(packageConfiguration.dependencies));
+
+                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+
+                for (const dependency of linkDependencies) {
+                    run(false, "npm", "link", dependency);
+                }
+            } else if (state[name] === undefined) {
+                // Repository is already at the required version and no steps have yet been taken, so skip completely.
+                skipRepository = true;
+            }
+        }
+
+        if (!skipRepository) {
+            const workflowsPath = ".github/workflows/";
+
+            let hasPushWorkflow = false;
+            let hasReleaseWorkflow = false;
+
+            if (fs.existsSync(workflowsPath)) {
+                for (const workflowFile of fs.readdirSync(workflowsPath)) {
+                    if (workflowFile.endsWith(".yml")) {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Workflow configuration format is known.
+                        const workflowOn = (yamlParse(fs.readFileSync(path.resolve(workflowsPath, workflowFile)).toString()) as WorkflowConfiguration).on;
+
+                        if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("main"))) {
+                            hasPushWorkflow = true;
+                        }
+
+                        if (workflowOn.release !== undefined && (workflowOn.release.types === undefined || workflowOn.release.types.includes("published"))) {
+                            hasReleaseWorkflow = true;
                         }
                     }
                 }
             }
 
-            updateDependencies(packageConfiguration.devDependencies);
-            updateDependencies(packageConfiguration.dependencies);
+            /**
+             * Validate the workflow by waiting for it to complete.
+             */
+            async function validateWorkflow(): Promise<void> {
+                const commitSHA = run(true, "git", "rev-parse", "HEAD")[0];
 
-            fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
-        }
+                let completed = false;
+                let queryCount = 0;
+                let workflowRunID = -1;
 
-        if (!skipRepository) {
-            await step(name, "npm install", () => {
-                run(false, "npm", "install");
-            }).then(async () => {
-                await step(name, "git commit", () => {
-                    run(false, "git", "commit", "--all", `--message=Updated to version ${repository.version}`);
-                });
-            }).then(async () => {
-                await step(name, "git tag", () => {
-                    run(false, "git", "tag", tag);
-                });
-            }).then(async () => {
-                await step(name, "git push", () => {
-                    run(false, "git", "push", "--atomic", "origin", "main", tag);
-                });
-            }).then(async () => {
-                await step(name, "push workflow", async () => {
-                    if (hasPushWorkflow) {
-                        await validateWorkflow();
-                    }
-                });
-            }).then(async () => {
-                await step(name, "release", async () => {
-                    const versionSplit = repository.version.split("-");
-                    const prerelease = versionSplit.length !== 1;
-
-                    await octokit.rest.repos.createRelease({
-                        ...octokitParameterBase,
-                        tag_name: tag,
-                        name: `${prerelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)} r` : "R"}elease ${versionSplit[0]}`,
-                        // TODO Remove "false" override.
-                        prerelease: false
+                do {
+                    await new Promise<void>((resolve) => {
+                        setTimeout(resolve, 2000);
                     });
-                });
-            }).then(async () => {
-                await step(name, "release workflow", async () => {
-                    if (hasReleaseWorkflow) {
-                        await validateWorkflow();
+
+                    const response = await octokit.rest.actions.listWorkflowRunsForRepo({
+                        ...octokitParameterBase,
+                        head_sha: commitSHA
+                    });
+
+                    for (const workflowRun of response.data.workflow_runs) {
+                        if (workflowRun.status !== "completed") {
+                            if (workflowRun.id === workflowRunID) {
+                                process.stdout.write(".");
+                            } else if (workflowRunID === -1) {
+                                workflowRunID = workflowRun.id;
+
+                                console.log(`Workflow run ID ${workflowRunID}`);
+                            } else {
+                                throw new Error(`Parallel workflow runs for SHA ${commitSHA}`);
+                            }
+                        } else if (workflowRun.id === workflowRunID) {
+                            process.stdout.write("\n");
+
+                            if (workflowRun.conclusion !== "success") {
+                                throw new Error(`Workflow ${workflowRun.conclusion}`);
+                            }
+
+                            completed = true;
+                        }
                     }
+
+                    // Abort if workflow run not started after 10 queries.
+                    if (++queryCount === 10 && workflowRunID === -1) {
+                        throw new Error(`Workflow run not started for SHA ${commitSHA}`);
+                    }
+                } while (!completed);
+            }
+
+            await step(name, "install", () => {
+                run(false, "npm", "install");
+            });
+
+            await step(name, "build", () => {
+                run(false, "npm", "run", "build", "--if-present");
+            });
+
+            if (!(packageConfiguration.private ?? false)) {
+                await step(name, "link", () => {
+                    run(false, "npm", "link");
+                });
+            }
+
+            await step(name, "commit", () => {
+                run(false, "git", "commit", "--all", `--message=Updated to version ${repository.version}`);
+            });
+
+            await step(name, "tag", () => {
+                run(false, "git", "tag", tag);
+            });
+
+            await step(name, "push", () => {
+                run(false, "git", "push", "--atomic", "origin", "main", tag);
+            });
+
+            if (hasPushWorkflow) {
+                await step(name, "workflow (push)", async () => {
+                    await validateWorkflow();
+                });
+            }
+
+            await step(name, "release", async () => {
+                const versionSplit = repository.version.split("-");
+                const prerelease = versionSplit.length !== 1;
+
+                await octokit.rest.repos.createRelease({
+                    ...octokitParameterBase,
+                    tag_name: tag,
+                    name: `${prerelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)} r` : "R"}elease ${versionSplit[0]}`,
+                    // TODO Remove "false" override.
+                    prerelease: false
                 });
             });
+
+            if (hasReleaseWorkflow) {
+                await step(name, "workflow (release)", async () => {
+                    await validateWorkflow();
+                });
+            }
 
             state[name] = "complete";
             saveState();
         }
     }
 
-    state = {};
-    saveState();
+    // All repositories released.
+    fs.rmSync(statePath);
 }
 
 await release().catch((e: unknown) => {
