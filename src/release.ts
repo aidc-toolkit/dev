@@ -253,6 +253,7 @@ async function release(): Promise<void> {
                     const linkDependencies = new Array<string>();
 
                     if (dependencies !== undefined) {
+                        // eslint-disable-next-line guard-for-in -- Dependency record type is shallow.
                         for (const dependency in dependencies) {
                             const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
 
