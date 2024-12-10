@@ -143,12 +143,17 @@ function run(captureOutput: boolean, command: string, ...args: string[]): string
 }
 
 /**
+ * Supported states.
+ */
+type State = "skipped" | "install" | "build" | "link" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "complete";
+
+/**
  * Release.
  */
 async function release(): Promise<void> {
     const statePath = path.resolve("config/release.state.json");
 
-    let state: Record<string, string | undefined> = {};
+    let state: Record<string, State | undefined> = {};
 
     if (fs.existsSync(statePath)) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Format is controlled by this process.
@@ -177,7 +182,7 @@ async function release(): Promise<void> {
      * @returns
      * Promise.
      */
-    async function step(name: string, stepState: string, callback: () => (void | Promise<void>)): Promise<void> {
+    async function step(name: string, stepState: State, callback: () => (void | Promise<void>)): Promise<void> {
         const repositoryState = state[name];
 
         if (repositoryState === undefined || repositoryState === stepState) {
@@ -201,6 +206,8 @@ async function release(): Promise<void> {
         auth: secureConfiguration.token,
         userAgent: `${configuration.organization} release`
     });
+
+    let allSkipped = true;
 
     for (const name of Object.keys(configuration.repositories)) {
         const repository = configuration.repositories[name];
@@ -232,54 +239,79 @@ async function release(): Promise<void> {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Package configuration format is known.
         const packageConfiguration: PackageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString());
 
-        let skipRepository = state[name] === "complete";
+        let skipRepository: boolean;
 
-        if (!skipRepository) {
-            if (packageConfiguration.version !== repository.version) {
-                packageConfiguration.version = repository.version;
+        switch (state[name]) {
+            case undefined:
+                // No steps have yet been taken; skip if repository is already at the required version.
+                skipRepository = packageConfiguration.version === repository.version;
 
-                const atOrganization = `@${configuration.organization}`;
+                if (!skipRepository) {
+                    allSkipped = false;
 
-                /**
-                 * Update dependencies from the organization.
-                 *
-                 * @param dependencies
-                 * Dependencies.
-                 *
-                 * @returns
-                 * List of dependencies that require linking.
-                 */
-                function updateDependencies(dependencies: Record<string, string> | undefined): string[] {
-                    const linkDependencies = new Array<string>();
+                    packageConfiguration.version = repository.version;
 
-                    if (dependencies !== undefined) {
-                        // eslint-disable-next-line guard-for-in -- Dependency record type is shallow.
-                        for (const dependency in dependencies) {
-                            const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
+                    const atOrganization = `@${configuration.organization}`;
 
-                            if (dependencyAtOrganization === atOrganization) {
-                                dependencies[dependency] = `^${configuration.repositories[dependencyRepositoryName].version}`;
+                    /**
+                     * Update dependencies from the organization.
+                     *
+                     * @param dependencies
+                     * Dependencies.
+                     *
+                     * @returns
+                     * List of dependencies that require linking.
+                     */
+                    function updateDependencies(dependencies: Record<string, string> | undefined): string[] {
+                        const linkDependencies = new Array<string>();
 
-                                linkDependencies.push(dependency);
+                        if (dependencies !== undefined) {
+                            // eslint-disable-next-line guard-for-in -- Dependency record type is shallow.
+                            for (const dependency in dependencies) {
+                                const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
+
+                                if (dependencyAtOrganization === atOrganization) {
+                                    dependencies[dependency] = `^${configuration.repositories[dependencyRepositoryName].version}`;
+
+                                    linkDependencies.push(dependency);
+                                }
                             }
                         }
+
+                        return linkDependencies;
                     }
 
-                    return linkDependencies;
+                    const linkDependencies = updateDependencies(packageConfiguration.devDependencies);
+                    linkDependencies.push(...updateDependencies(packageConfiguration.dependencies));
+
+                    fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+
+                    for (const dependency of linkDependencies) {
+                        run(false, "npm", "link", dependency);
+                    }
+                } else if (!allSkipped) {
+                    throw new Error(`Repository ${name} is supposed to be skipped but at least one prior repository has been updated`);
                 }
+                break;
 
-                const linkDependencies = updateDependencies(packageConfiguration.devDependencies);
-                linkDependencies.push(...updateDependencies(packageConfiguration.dependencies));
-
-                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
-
-                for (const dependency of linkDependencies) {
-                    run(false, "npm", "link", dependency);
-                }
-            } else if (state[name] === undefined) {
-                // Repository is already at the required version and no steps have yet been taken, so skip completely.
+            case "skipped":
+                // Repository was skipped on the prior run.
                 skipRepository = true;
-            }
+                break;
+
+            case "complete":
+                // Repository was fully updated on the prior run.
+                skipRepository = true;
+
+                allSkipped = false;
+                break;
+
+            default:
+                // Repository failed at some step on the prior run.
+                skipRepository = false;
+
+                allSkipped = false;
+                break;
         }
 
         if (!skipRepository) {
@@ -406,8 +438,11 @@ async function release(): Promise<void> {
             }
 
             state[name] = "complete";
-            saveState();
+        } else {
+            state[name] = "skipped";
         }
+
+        saveState();
     }
 
     // All repositories released.
