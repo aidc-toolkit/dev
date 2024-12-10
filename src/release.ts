@@ -17,6 +17,11 @@ interface Configuration {
     organization: string;
 
     /**
+     * If true, the fact that the repository is uncommitted is ignored. For development and testing purposes only.
+     */
+    ignoreUncommitted?: boolean;
+
+    /**
      * Repositories.
      */
     repositories: Record<string, {
@@ -30,11 +35,6 @@ interface Configuration {
          */
         version: string;
     }>;
-
-    /**
-     * If true, the fact that the repository is uncommitted is ignored. For development and testing purposes only.
-     */
-    ignoreUncommitted?: boolean;
 }
 
 /**
@@ -208,6 +208,7 @@ async function release(): Promise<void> {
     });
 
     let allSkipped = true;
+    let firstRepository = true;
 
     for (const name of Object.keys(configuration.repositories)) {
         const repository = configuration.repositories[name];
@@ -289,8 +290,15 @@ async function release(): Promise<void> {
                     for (const dependency of linkDependencies) {
                         run(false, "npm", "link", dependency);
                     }
-                } else if (!allSkipped) {
-                    throw new Error(`Repository ${name} is supposed to be skipped but at least one prior repository has been updated`);
+                } else {
+                    if (!allSkipped) {
+                        throw new Error(`Repository ${name} is supposed to be skipped but at least one prior repository has been updated`);
+                    }
+
+                    // First repository is excluded as it hosts development artefacts only, including the configuration file for this process.
+                    if (!firstRepository && run(true, "git", "tag", "--points-at", "HEAD", tag).length === 0) {
+                        throw new Error(`Repository ${name} has at least one commit since version ${repository.version}`);
+                    }
                 }
                 break;
 
@@ -443,6 +451,8 @@ async function release(): Promise<void> {
         }
 
         saveState();
+
+        firstRepository = false;
     }
 
     // All repositories released.
