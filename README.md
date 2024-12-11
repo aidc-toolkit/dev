@@ -20,8 +20,8 @@ Options specific to the package may override or supplement core options if requi
 ## ESLint Configuration
 
 All AIDC Toolkit packages are expected to follow a common coding style (enforced by [ESLint](https://eslint.org/)),
-which implies that they all have the same ESLint configuration. This is supported by the [`eslint.config.template.ts`
-file](src/eslint.config.template.ts) in this package. Core changes should be managed in that file, with other packages
+which implies that they all have the same ESLint configuration. This is supported by the [`eslint-config-template.ts`
+file](src/eslint-config-template.ts) in this package. Core changes should be managed in that file, with other packages
 declaring their own `eslint.config.js` file as follows:
 
 ```javascript

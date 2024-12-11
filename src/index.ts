@@ -1,1 +1,1 @@
-export * from "./eslint.config.template.js";
+export * from "./eslint-config-template.js";
