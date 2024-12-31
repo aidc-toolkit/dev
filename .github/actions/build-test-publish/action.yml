@@ -29,9 +29,6 @@ runs:
     - name: Build
       shell: bash
       run: |
-        # Removing package-lock.json is necessary to force download of all dependencies including linked dependencies.
-        rm package-lock.json
-        
         npm install
         
         # This is necessary to work around platform-specific optional dependencies bug
