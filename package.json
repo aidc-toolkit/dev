@@ -22,8 +22,8 @@
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint .",
     "release": "tsx src/release.ts",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "build-doc": "npm run build"
+    "build-dist": "tsup src/index.ts --format cjs,esm --dts",
+    "build-doc": "npm run build-dist"
   },
   "devDependencies": {
     "copy-files-from-to": "^3.12.0",
