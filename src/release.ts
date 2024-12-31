@@ -1,6 +1,7 @@
 import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "node:path";
+import * as util from "node:util";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 
@@ -329,18 +330,16 @@ async function release(): Promise<void> {
             let hasReleaseWorkflow = false;
 
             if (fs.existsSync(workflowsPath)) {
-                for (const workflowFile of fs.readdirSync(workflowsPath)) {
-                    if (workflowFile.endsWith(".yml")) {
-                        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Workflow configuration format is known.
-                        const workflowOn = (yamlParse(fs.readFileSync(path.resolve(workflowsPath, workflowFile)).toString()) as WorkflowConfiguration).on;
+                for (const workflowFile of fs.readdirSync(workflowsPath).filter(workflowFile => workflowFile.endsWith(".yml"))) {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Workflow configuration format is known.
+                    const workflowOn = (yamlParse(fs.readFileSync(path.resolve(workflowsPath, workflowFile)).toString()) as WorkflowConfiguration).on;
 
-                        if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("main"))) {
-                            hasPushWorkflow = true;
-                        }
+                    if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("main"))) {
+                        hasPushWorkflow = true;
+                    }
 
-                        if (workflowOn.release !== undefined && (workflowOn.release.types === undefined || workflowOn.release.types.includes("published"))) {
-                            hasReleaseWorkflow = true;
-                        }
+                    if (workflowOn.release !== undefined && (workflowOn.release.types === undefined || workflowOn.release.types.includes("published"))) {
+                        hasReleaseWorkflow = true;
                     }
                 }
             }
@@ -356,9 +355,7 @@ async function release(): Promise<void> {
                 let workflowRunID = -1;
 
                 do {
-                    await new Promise<void>((resolve) => {
-                        setTimeout(resolve, 2000);
-                    });
+                    await util.promisify(setTimeout)(2000);
 
                     const response = await octokit.rest.actions.listWorkflowRunsForRepo({
                         ...octokitParameterBase,

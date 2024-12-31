@@ -26,6 +26,7 @@ export const esLintConfigAIDCToolkit = tseslint.config(
 
         rules: {
             "complexity": "off",
+            "max-lines": "off",
             "no-dupe-class-members": "off",
             "no-redeclare": "off",
             "no-unused-vars": "off",
@@ -102,6 +103,7 @@ export const esLintConfigAIDCToolkit = tseslint.config(
             "test/**/*"
         ],
         rules: {
+            "max-nested-callbacks": "off",
             "jsdoc/require-jsdoc": "off",
             "@typescript-eslint/dot-notation": "off",
             "@typescript-eslint/no-unsafe-type-assertion": "off"
