@@ -12,16 +12,22 @@ jobs:
   release:
     runs-on: ubuntu-latest
 
+    if: github.event_name == 'release'
+
     steps:
       - name: Build, test, and publish (release)
-        if: github.event_name == 'release'
         uses: aidc-toolkit/dev/.github/actions/build-test-publish@main
         with:
           secrets: ${{ toJSON(secrets) }}
           vars: ${{ toJSON(vars) }}
 
-      - name: Build, test, and publish (test release)
-        if: github.event_name != 'release'
+  test:
+    runs-on: ubuntu-latest
+
+    if: github.event_name != 'release'
+
+    steps:
+      - name: Build, test, and publish (test)
         uses: aidc-toolkit/dev/.github/actions/build-test-publish@test-release
         with:
           secrets: ${{ toJSON(secrets) }}
