@@ -31,10 +31,6 @@ runs:
       run: |
         npm install
         
-        # This is necessary to work around platform-specific optional dependencies bug
-        # (https://github.com/npm/cli/issues/4828).
-        npm install @rollup/rollup-linux-x64-gnu
-
         # All projects have build-dist script.
         npm run build-dist
 
