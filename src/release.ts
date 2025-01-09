@@ -283,14 +283,11 @@ async function release(): Promise<void> {
                         return linkDependencies;
                     }
 
-                    const linkDependencies = updateDependencies(packageConfiguration.devDependencies);
-                    linkDependencies.push(...updateDependencies(packageConfiguration.dependencies));
+                    const linkDependencies = [...updateDependencies(packageConfiguration.devDependencies), ...updateDependencies(packageConfiguration.dependencies)];
 
                     fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
-                    for (const dependency of linkDependencies) {
-                        run(false, "npm", "link", dependency);
-                    }
+                    run(false, "npm", "link", ...linkDependencies);
                 } else {
                     if (!allSkipped) {
                         throw new Error(`Repository ${name} is supposed to be skipped but at least one prior repository has been updated`);
