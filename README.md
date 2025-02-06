@@ -37,18 +37,18 @@ Options specific to the package may override or supplement core options if requi
 All AIDC Toolkit packages are expected to follow a common coding style (enforced by [ESLint](https://eslint.org/)),
 which implies that they all have the same ESLint configuration. This is supported by the [`eslint-config-template.ts`
 file](src/eslint-config-template.ts) in this package. Core changes should be managed in that file, with other packages
-declaring their own `eslint.config.js` file as follows:
+declaring their own `eslint.config.ts` file as follows:
 
-```javascript
+```typescript
 import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
 
 export default esLintConfigAIDCToolkit;
 ```
 
-Rules specific to the package may override or supplement core rules if required. If so, the `eslint.config.js` file
+Rules specific to the package may override or supplement core rules if required. If so, the `eslint.config.ts` file
 should be declared as follows:
 
-```javascript
+```typescript
 import tseslint from "typescript-eslint";
 import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
 // Additional imports here as required.
@@ -61,5 +61,5 @@ export default tseslint.config(
 );
 ```
 
-ESLint requires the installation of the `eslint` package as a development dependency. Other development dependencies may
-be required if overriding or supplementing the core rules.
+ESLint requires the installation of the `eslint` and `jiti` packages as development dependencies. Other development
+dependencies may be required if overriding or supplementing the core rules.
