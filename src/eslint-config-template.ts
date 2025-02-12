@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 
 export const esLintConfigAIDCToolkit = tseslint.config(
     {
-        ignores: ["eslint.config.ts", "dist"]
+        ignores: ["dist"]
     },
     js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
