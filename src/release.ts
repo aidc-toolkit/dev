@@ -174,10 +174,16 @@ async function release(): Promise<void> {
      *
      * @param dependencies
      * Dependencies.
+     *
      * @param restoreAlpha
      * If true, "alpha" is restored as the version for development.
+     *
+     * @returns
+     * True if any dependencies were updated.
      */
-    function updateDependencies(dependencies: Record<string, string> | undefined, restoreAlpha: boolean): void {
+    function updateDependencies(dependencies: Record<string, string> | undefined, restoreAlpha: boolean): boolean {
+        let anyUpdated = false;
+
         if (dependencies !== undefined) {
             // eslint-disable-next-line guard-for-in -- Dependency record type is shallow.
             for (const dependency in dependencies) {
@@ -185,9 +191,12 @@ async function release(): Promise<void> {
 
                 if (dependencyAtOrganization === atOrganization) {
                     dependencies[dependency] = !restoreAlpha ? `^${configuration.repositories[dependencyRepositoryName].version}` : "alpha";
+                    anyUpdated = true;
                 }
             }
         }
+
+        return anyUpdated;
     }
 
     const octokit = new Octokit({
@@ -355,13 +364,7 @@ async function release(): Promise<void> {
             });
 
             await step(name, "commit", () => {
-                run(false, "git", "commit", "--all", `--message=Updated to version ${repository.version}`);
-
-                // Restore dependencies to "alpha" version for development.
-                updateDependencies(packageConfiguration.devDependencies, true);
-                updateDependencies(packageConfiguration.dependencies, true);
-
-                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+                run(false, "git", "commit", "--all", `--message=Updated to version ${repository.version}.`);
             });
 
             await step(name, "tag", () => {
@@ -370,6 +373,15 @@ async function release(): Promise<void> {
 
             await step(name, "push", () => {
                 run(false, "git", "push", "--atomic", "origin", "main", tag);
+
+                // Restore dependencies to "alpha" version for development.
+                const devDependenciesUpdated = updateDependencies(packageConfiguration.devDependencies, true);
+                const dependenciesUpdated = updateDependencies(packageConfiguration.dependencies, true);
+
+                if (devDependenciesUpdated || dependenciesUpdated) {
+                    fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+                    run(false, "git", "commit", "--all", "--message=Restored alpha version.");
+                }
             });
 
             if (hasPushWorkflow) {
