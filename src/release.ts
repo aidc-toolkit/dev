@@ -253,6 +253,8 @@ async function release(): Promise<void> {
                     if (!firstRepository && run(true, "git", "tag", "--points-at", "HEAD", tag).length === 0) {
                         throw new Error(`Repository ${name} has at least one commit since version ${repository.version}`);
                     }
+
+                    state[name] = "skipped";
                 }
                 break;
 
@@ -396,8 +398,6 @@ async function release(): Promise<void> {
             }
 
             state[name] = "complete";
-        } else {
-            state[name] = "skipped";
         }
 
         saveState();
