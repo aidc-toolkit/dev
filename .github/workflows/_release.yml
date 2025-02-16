@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  workflow_call:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ vars.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org/
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start terminal session (pre build)
+        if: vars.TERMINAL_PRE_BUILD == 'true'
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Build
+        run: |
+          npm install
+          
+          # Project must have build:release script.
+          npm run build:release
+
+      - name: Start terminal session (post build)
+        if: vars.TERMINAL_POST_BUILD == 'true'
+        uses: mxschmitt/action-tmate@v3
+
+      - name: Test
+        run: |
+          # Run test script if present.
+          npm run test --if-present
+
+      - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+        run: |
+          # Get the tag on the version property, minus timestamp, if any.
+          tag=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s | cut -d "-" -f2 -s` | sed -e 's/^\([a-z]*\)\([0-9]*\)/\1/'
+          
+          # If release is not official, tag it with the release phase.
+          if [ "$tag" != "" ]
+          then
+            tag_args="--tag $tag"
+          fi
+          
+          if [ "${{ github.event_name }}" != "release" ]
+          then
+            dry_run_arg="--dry-run"
+          fi
+          
+          # Create .npmignore to exclude hidden directories.
+          echo /.\*/ > .npmignore
+          
+          npm publish --access public $tag_args $dry_run_arg
