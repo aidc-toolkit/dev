@@ -21,9 +21,10 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint .",
-    "release": "tsx src/release.ts",
-    "build-dist": "tsup src/index.ts --format cjs,esm --dts",
-    "build-doc": "npm run build-dist"
+    "build:core": "tsup",
+    "build:dev": "npm run build:core && tsc src/index.ts --outDir dist --target esnext --moduleResolution nodenext --module nodenext --emitDeclarationOnly --declaration --declarationMap",
+    "build:release": "npm run build:core -- --minify",
+    "release": "tsx src/release.ts"
   },
   "devDependencies": {
     "copy-files-from-to": "^3.12.0",
