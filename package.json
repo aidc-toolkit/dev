@@ -21,27 +21,31 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint .",
-    "build:core": "tsup",
+    "build:core": "tsup src/index.ts --format cjs,esm --dts --clean",
     "build:dev": "npm run build:core && tsc src/index.ts --outDir dist --target esnext --moduleResolution nodenext --module nodenext --emitDeclarationOnly --declaration --declarationMap",
     "build:release": "npm run build:core -- --minify",
+    "publish-dev": "bin/publish-dev-local",
     "release": "tsx src/release.ts"
   },
+  "bin": {
+    "publish-dev": "bin/publish-dev"
+  },
   "devDependencies": {
-    "copy-files-from-to": "^3.12.0",
-    "eslint": "^9.20.1",
-    "jiti": "^2.4.2",
-    "ts-node": "^10.9.2",
-    "tsup": "^8.3.6",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.3"
+    "copy-files-from-to": "^3.12.0"
   },
   "dependencies": {
     "@eslint/js": "^9.20.0",
     "@octokit/types": "^13.8.0",
     "@stylistic/eslint-plugin": "^3.1.0",
+    "eslint": "^9.20.1",
     "eslint-config-love": "^118.0.0",
     "eslint-plugin-jsdoc": "^50.6.3",
+    "jiti": "^2.4.2",
     "octokit": "^4.1.2",
+    "ts-node": "^10.9.2",
+    "tsup": "^8.3.6",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.0",
     "yaml": "^2.7.0"
   }

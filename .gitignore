@@ -3,3 +3,4 @@
 /config/*.secure.json
 /config/*.state.json
 /package-lock.json
+/.npmrc

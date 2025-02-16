@@ -1,6 +1,5 @@
 /* eslint-disable no-console -- Console application. */
 
-import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "node:path";
 import * as util from "node:util";
@@ -9,6 +8,7 @@ import { parse as yamlParse } from "yaml";
 
 import configurationJSON from "../config/release.json" assert { type: "json" };
 import secureConfigurationJSON from "../config/release.secure.json" assert { type: "json" };
+import { run } from "./command-util.js";
 
 /**
  * Configuration layout of release.json.
@@ -60,7 +60,7 @@ interface PackageConfiguration {
     version: string;
 
     /**
-     * If true, package is private and not linked by others.
+     * If true, package is private and not referenced by others.
      */
     private?: boolean;
 
@@ -111,57 +111,19 @@ interface WorkflowConfiguration {
 }
 
 /**
- * Run a command and optionally capture its output.
- *
- * @param captureOutput
- * If true, output is captured and returned.
- *
- * @param command
- * Command to run.
- *
- * @param args
- * Arguments to command.
- *
- * @returns
- * Output if captured or empty array if not.
- */
-function run(captureOutput: boolean, command: string, ...args: string[]): string[] {
-    const spawnResult = spawnSync(command, args, {
-        stdio: ["inherit", captureOutput ? "pipe" : "inherit", "inherit"]
-    });
-
-    if (spawnResult.error !== undefined) {
-        throw spawnResult.error;
-    }
-
-    if (spawnResult.status === null) {
-        throw new Error(`Terminated by signal ${spawnResult.signal}`);
-    }
-
-    if (spawnResult.status !== 0) {
-        throw new Error(`Failed with status ${spawnResult.status}`);
-    }
-
-    return captureOutput ? spawnResult.stdout.toString().split("\n").slice(0, -1) : [];
-}
-
-/**
  * Supported states.
  */
-type State = "skipped" | "install" | "build" | "link" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "complete";
+type State = "skipped" | "install" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "complete";
 
 /**
  * Release.
  */
 async function release(): Promise<void> {
+    // State may be written from any directory so full path is required.
     const statePath = path.resolve("config/release.state.json");
 
-    let state: Record<string, State | undefined> = {};
-
-    if (fs.existsSync(statePath)) {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Format is controlled by this process.
-        state = JSON.parse(fs.readFileSync(statePath).toString());
-    }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Format is controlled by this process.
+    const state: Record<string, State | undefined> = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath).toString()) : {};
 
     /**
      * Save the current state.
@@ -201,6 +163,29 @@ async function release(): Promise<void> {
                 state[name] = undefined;
             } finally {
                 saveState();
+            }
+        }
+    }
+
+    const atOrganization = `@${configuration.organization}`;
+
+    /**
+     * Update dependencies from the organization.
+     *
+     * @param dependencies
+     * Dependencies.
+     * @param restoreAlpha
+     * If true, "alpha" is restored as the version for development.
+     */
+    function updateDependencies(dependencies: Record<string, string> | undefined, restoreAlpha: boolean): void {
+        if (dependencies !== undefined) {
+            // eslint-disable-next-line guard-for-in -- Dependency record type is shallow.
+            for (const dependency in dependencies) {
+                const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
+
+                if (dependencyAtOrganization === atOrganization) {
+                    dependencies[dependency] = !restoreAlpha ? `^${configuration.repositories[dependencyRepositoryName].version}` : "alpha";
+                }
             }
         }
     }
@@ -255,41 +240,10 @@ async function release(): Promise<void> {
 
                     packageConfiguration.version = repository.version;
 
-                    const atOrganization = `@${configuration.organization}`;
-
-                    /**
-                     * Update dependencies from the organization.
-                     *
-                     * @param dependencies
-                     * Dependencies.
-                     *
-                     * @returns
-                     * List of dependencies that require linking.
-                     */
-                    function updateDependencies(dependencies: Record<string, string> | undefined): string[] {
-                        const linkDependencies = new Array<string>();
-
-                        if (dependencies !== undefined) {
-                            // eslint-disable-next-line guard-for-in -- Dependency record type is shallow.
-                            for (const dependency in dependencies) {
-                                const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
-
-                                if (dependencyAtOrganization === atOrganization) {
-                                    dependencies[dependency] = `^${configuration.repositories[dependencyRepositoryName].version}`;
-
-                                    linkDependencies.push(dependency);
-                                }
-                            }
-                        }
-
-                        return linkDependencies;
-                    }
-
-                    const linkDependencies = [...updateDependencies(packageConfiguration.devDependencies), ...updateDependencies(packageConfiguration.dependencies)];
+                    updateDependencies(packageConfiguration.devDependencies, false);
+                    updateDependencies(packageConfiguration.dependencies, false);
 
                     fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
-
-                    run(false, "npm", "link", ...linkDependencies);
                 } else {
                     if (!allSkipped) {
                         throw new Error(`Repository ${name} is supposed to be skipped but at least one prior repository has been updated`);
@@ -398,14 +352,14 @@ async function release(): Promise<void> {
                 run(false, "npm", "run", "build", "--if-present");
             });
 
-            if (!(packageConfiguration.private ?? false)) {
-                await step(name, "link", () => {
-                    run(false, "npm", "link");
-                });
-            }
-
             await step(name, "commit", () => {
                 run(false, "git", "commit", "--all", `--message=Updated to version ${repository.version}`);
+
+                // Restore dependencies to "alpha" version for development.
+                updateDependencies(packageConfiguration.devDependencies, true);
+                updateDependencies(packageConfiguration.dependencies, true);
+
+                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
             });
 
             await step(name, "tag", () => {
