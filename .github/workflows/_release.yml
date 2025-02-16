@@ -41,8 +41,8 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: |
-          # Get the tag on the version property, minus timestamp, if any.
-          tag=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s | cut -d "-" -f2 -s` | sed -e 's/^\([a-z]*\)\([0-9]*\)/\1/'
+          # Get the tag on the version property if any, minus pre-release identifier if any.
+          tag=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s | cut -d "-" -f2 -s | cut -d "." -f1`
           
           # If release is not official, tag it with the release phase.
           if [ "$tag" != "" ]
