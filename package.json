@@ -20,10 +20,11 @@
   },
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
-    "lint": "eslint .",
-    "build:core": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "build:dev": "npm run build:core && tsc src/index.ts --outDir dist --target esnext --moduleResolution nodenext --module nodenext --emitDeclarationOnly --declaration --declarationMap",
+    "lint": "eslint",
+    "build:core": "tsup",
+    "build:dev": "npm run build:core && tsc --project tsconfig-declaration-local.json",
     "build:release": "npm run build:core -- --minify",
+    "build:doc": "npm run build:dev",
     "publish-dev": "bin/publish-dev-local",
     "release": "tsx src/release.ts"
   },

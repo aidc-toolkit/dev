@@ -9,7 +9,7 @@
     "noPropertyAccessFromIndexSignature": true,
 
     // Modules.
-    "module": "nodenext",
+    "module": "NodeNext",
     "resolveJsonModule": true,
 
     // Interop constraints.
@@ -17,7 +17,7 @@
     "forceConsistentCasingInFileNames": true,
 
     // Language and environment.
-    "target": "esnext",
+    "target": "ESNext",
     "useDefineForClassFields": true,
 
     // Completeness.
