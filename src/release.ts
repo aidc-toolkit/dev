@@ -373,15 +373,6 @@ async function release(): Promise<void> {
 
             await step(name, "push", () => {
                 run(false, "git", "push", "--atomic", "origin", "main", tag);
-
-                // Restore dependencies to "alpha" version for development.
-                const devDependenciesUpdated = updateDependencies(packageConfiguration.devDependencies, true);
-                const dependenciesUpdated = updateDependencies(packageConfiguration.dependencies, true);
-
-                if (devDependenciesUpdated || dependenciesUpdated) {
-                    fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
-                    run(false, "git", "commit", "--all", "--message=Restored alpha version.");
-                }
             });
 
             if (hasPushWorkflow) {
@@ -407,6 +398,15 @@ async function release(): Promise<void> {
                 await step(name, "workflow (release)", async () => {
                     await validateWorkflow();
                 });
+            }
+
+            // Restore dependencies to "alpha" version for development.
+            const devDependenciesUpdated = updateDependencies(packageConfiguration.devDependencies, true);
+            const dependenciesUpdated = updateDependencies(packageConfiguration.dependencies, true);
+
+            if (devDependenciesUpdated || dependenciesUpdated) {
+                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+                run(false, "git", "commit", "--all", "--message=Restored alpha version.");
             }
 
             state[name] = "complete";
