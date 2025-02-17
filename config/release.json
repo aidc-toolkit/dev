@@ -2,26 +2,26 @@
   "organization": "aidc-toolkit",
   "repositories": {
     "dev": {
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     },
     "core": {
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     },
     "utility": {
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     },
     "gs1": {
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     },
     "demo": {
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     },
     "app-extension": {
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     },
     "aidc-toolkit.github.io": {
       "directory": "doc",
-      "version": "0.9.13-beta"
+      "version": "0.9.14-beta"
     }
   }
 }
