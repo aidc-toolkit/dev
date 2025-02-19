@@ -4,7 +4,7 @@
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
-  "homepage": "https://github.com/aidc-toolkit",
+  "homepage": "https://aidc-toolkit.com/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aidc-toolkit/dev.git"
