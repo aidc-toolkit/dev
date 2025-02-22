@@ -32,20 +32,20 @@
     "publish-dev": "bin/publish-dev"
   },
   "devDependencies": {
-    "copy-files-from-to": "^3.12.0"
+    "copy-files-from-to": "^3.12.1"
   },
   "dependencies": {
     "@eslint/js": "^9.20.0",
     "@octokit/types": "^13.8.0",
-    "@stylistic/eslint-plugin": "^3.1.0",
-    "eslint": "^9.20.1",
+    "@stylistic/eslint-plugin": "^4.0.1",
+    "eslint": "^9.21.0",
     "eslint-config-love": "^118.0.0",
     "eslint-plugin-jsdoc": "^50.6.3",
     "jiti": "^2.4.2",
     "octokit": "^4.1.2",
     "ts-node": "^10.9.2",
     "tsup": "^8.3.6",
-    "tsx": "^4.19.2",
+    "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.1",
     "yaml": "^2.7.0"
