@@ -10,7 +10,7 @@ export const esLintConfigAIDCToolkit = tseslint.config(
     },
     js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
-    stylistic.configs["recommended-flat"],
+    stylistic.configs.recommended,
     jsdoc.configs["flat/recommended-typescript"],
     esLintConfigLove,
     {
