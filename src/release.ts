@@ -113,7 +113,7 @@ interface WorkflowConfiguration {
 /**
  * Supported states.
  */
-type State = "skipped" | "install" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "complete";
+type State = "skipped" | "install" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "restore alpha" | "complete";
 
 /**
  * Release.
@@ -400,14 +400,16 @@ async function release(): Promise<void> {
                 });
             }
 
-            // Restore dependencies to "alpha" version for development.
-            const devDependenciesUpdated = updateDependencies(packageConfiguration.devDependencies, true);
-            const dependenciesUpdated = updateDependencies(packageConfiguration.dependencies, true);
+            await step(name, "restore alpha", () => {
+                // Restore dependencies to "alpha" version for development.
+                const devDependenciesUpdated = updateDependencies(packageConfiguration.devDependencies, true);
+                const dependenciesUpdated = updateDependencies(packageConfiguration.dependencies, true);
 
-            if (devDependenciesUpdated || dependenciesUpdated) {
-                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
-                run(false, "git", "commit", "--all", "--message=Restored alpha version.");
-            }
+                if (devDependenciesUpdated || dependenciesUpdated) {
+                    fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+                    run(false, "git", "commit", "--all", "--message=Restored alpha version.");
+                }
+            });
 
             state[name] = "complete";
         }
