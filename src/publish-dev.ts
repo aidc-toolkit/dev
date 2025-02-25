@@ -82,7 +82,7 @@ export function publishDev(): void {
     fixAlphaDependencies(atOrganization, packageConfiguration.dependencies);
 
     // Save the package configuration.
-    fs.writeFileSync(packageConfigurationPath, JSON.stringify(packageConfiguration, null, 2));
+    fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
     // Backup the package configuration file.
     fs.renameSync(packageConfigurationPath, backupPackageConfigurationPath);
@@ -95,7 +95,7 @@ export function publishDev(): void {
         packageConfiguration.version = `${majorVersion}.${minorVersion}.${patchVersion + 1}-alpha.${now.getFullYear()}${zeroPadded(now.getMonth() + 1, 2)}${zeroPadded(now.getDate(), 2)}${zeroPadded(now.getHours(), 2)}${zeroPadded(now.getMinutes(), 2)}`;
 
         // Save the package configuration.
-        fs.writeFileSync(packageConfigurationPath, JSON.stringify(packageConfiguration, null, 2));
+        fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
         // Run the development build.
         run(false, "npm", "run", "build:dev");
