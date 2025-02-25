@@ -22,11 +22,23 @@ jobs:
         uses: mxschmitt/action-tmate@v3
 
       - name: Build
+        id: build
         run: |
+          # Get the tag on the version property if any, minus pre-release identifier if any.
+          tag=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s | cut -d "-" -f2 -s | cut -d "." -f1`
+          
+          # Save the tag for future steps.
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+
           npm install
           
-          # Project must have build:release script.
-          npm run build:release
+          # If release is not official, build in development mode.
+          if [ "$tag" != "" ]
+          then
+            npm run build:dev
+          else
+            npm run build:release
+          fi
 
       - name: Start terminal session (post build)
         if: vars.TERMINAL_POST_BUILD == 'true'
@@ -41,8 +53,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: |
-          # Get the tag on the version property if any, minus pre-release identifier if any.
-          tag=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s | cut -d "-" -f2 -s | cut -d "." -f1`
+          tag="${{ steps.build.outputs.tag }}"
           
           # If release is not official, tag it with the release phase.
           if [ "$tag" != "" ]
