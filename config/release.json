@@ -19,6 +19,9 @@
     "app-extension": {
       "version": "0.9.15-beta"
     },
+    "app-generator": {
+      "version": "0.9.15-beta"
+    },
     "aidc-toolkit.github.io": {
       "directory": "doc",
       "version": "0.9.15-beta"
