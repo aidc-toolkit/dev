@@ -21,9 +21,9 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint",
-    "build:core": "tsup",
-    "build:dev": "npm run build:core && tsc --project tsconfig-declaration-local.json",
-    "build:release": "npm run build:core -- --minify",
+    "build:core": "rimraf dist && tsc --project",
+    "build:dev": "npm run build:core -- tsconfig-build-dev-local.json",
+    "build:release": "npm run build:core -- tsconfig-build-local.json",
     "build:doc": "npm run build:dev",
     "publish-dev": "bin/publish-dev-local",
     "release": "tsx src/release.ts"
@@ -43,8 +43,8 @@
     "eslint-plugin-jsdoc": "^50.6.3",
     "jiti": "^2.4.2",
     "octokit": "^4.1.2",
+    "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
-    "tsup": "^8.4.0",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.25.0",

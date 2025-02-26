@@ -6,9 +6,6 @@
   ],
 
   "compilerOptions": {
-    "outDir": "../../../dist",
-    "emitDeclarationOnly": true,
-    "declaration": true,
-    "declarationMap": true
+    "outDir": "../../../dist"
   }
 }

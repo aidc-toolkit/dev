@@ -1,26 +1,21 @@
-// https://aka.ms/tsconfig
 {
   "compilerOptions": {
-    // Type checking.
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
 
-    // Modules.
     "module": "NodeNext",
     "resolveJsonModule": true,
 
-    // Interop constraints.
+    "declaration": true,
+
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
-    // Language and environment.
     "target": "ESNext",
-    "useDefineForClassFields": true,
 
-    // Completeness.
     "skipLibCheck": true
   }
 }
