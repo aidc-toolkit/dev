@@ -102,6 +102,13 @@ export function publishDev(): void {
 
         // Publish to the registry.
         run(false, "npm", "publish", "--tag", "alpha");
+
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Result is an array.
+        for (const version of JSON.parse(run(true, "npm", "view", packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
+            if (/^[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+$/.test(version) && version !== packageConfiguration.version) {
+                run(false, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
+            }
+        }
     } finally {
         // Restore the package configuration file.
         fs.rmSync(packageConfigurationPath);
