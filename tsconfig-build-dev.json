@@ -2,6 +2,7 @@
   "extends": "./tsconfig-build.json",
 
   "compilerOptions": {
+    // Emit.
     "declarationMap": true,
     "sourceMap": true
   }

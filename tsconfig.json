@@ -1,22 +1,29 @@
+// https://aka.ms/tsconfig
 {
   "compilerOptions": {
+    // Type checking.
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
 
+    // Modules.
     "module": "ES2022",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
 
+    // Emit.
     "declaration": true,
 
+    // Interop constraints.
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
+    // Language and environment.
     "target": "ES2022",
 
+    // Completeness.
     "skipLibCheck": true
   }
 }
