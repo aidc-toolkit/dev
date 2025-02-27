@@ -24,16 +24,24 @@ jobs:
       - name: Build
         id: build
         run: |
-          # Get the tag on the version property if any, minus pre-release identifier if any.
-          tag=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s | cut -d "-" -f2 -s | cut -d "." -f1`
+          # Get the name property.
+          name=`grep "^  \"name\": " package.json | cut -d "\"" -f4 -s`
           
-          # Save the tag for future steps.
+          # Get the version property.
+          version=`grep "^  \"version\": " package.json | cut -d "\"" -f4 -s`
+          
+          # Get the tag on the version property if any, minus pre-release identifier if any.
+          tag=`echo $version | cut -d "-" -f2 -s | cut -d "." -f1`
+          
+          # Save the properties for future steps.
+          echo "name=$name" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
           echo "tag=$tag" >> $GITHUB_OUTPUT
 
           npm install
           
           # If release is not official, build in development mode.
-          if [ "$tag" != "" ]
+          if [[ $tag != "" ]]
           then
             npm run build:dev
           else
@@ -53,15 +61,17 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
         run: |
+          name="${{ steps.build.outputs.name }}"
+          version="${{ steps.build.outputs.version }}"
           tag="${{ steps.build.outputs.tag }}"
           
           # If release is not official, tag it with the release phase.
-          if [ "$tag" != "" ]
+          if [[ $tag != "" ]]
           then
             tag_args="--tag $tag"
           fi
           
-          if [ "${{ github.event_name }}" != "release" ]
+          if [[ "${{ github.event_name }}" != "release" ]]
           then
             dry_run_arg="--dry-run"
           fi
@@ -70,3 +80,9 @@ jobs:
           echo /.\*/ > .npmignore
           
           npm publish --access public $tag_args $dry_run_arg
+
+          # Make a tagged version 0 the latest.
+          if [[ $tag != "" && $version =~ ^0 ]]
+          then
+            npm dist-tag add $name@$version latest $dry_run_arg
+          fi
