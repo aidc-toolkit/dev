@@ -37,6 +37,11 @@ interface Configuration {
          * Version for repository. Not all repositories will be in sync with the version.
          */
         version: string;
+
+        /**
+         * True if the repository is local (not published to public npm registry) and its version should not be used in dependencies.
+         */
+        local?: boolean;
     }>;
 }
 
@@ -58,11 +63,6 @@ interface PackageConfiguration {
      * Version.
      */
     version: string;
-
-    /**
-     * If true, package is private and not referenced by others.
-     */
-    private?: boolean;
 
     /**
      * Development dependencies.
@@ -172,6 +172,12 @@ async function release(): Promise<void> {
     /**
      * Update dependencies from the organization.
      *
+     * @param development
+     * True if updating for development dependencies.
+     *
+     * @param local
+     * True if the repository is local (not published to public npm registry).
+     *
      * @param dependencies
      * Dependencies.
      *
@@ -181,7 +187,7 @@ async function release(): Promise<void> {
      * @returns
      * True if any dependencies were updated.
      */
-    function updateDependencies(dependencies: Record<string, string> | undefined, restoreAlpha: boolean): boolean {
+    function updateDependencies(development: boolean, local: boolean | undefined, dependencies: Record<string, string> | undefined, restoreAlpha: boolean): boolean {
         let anyUpdated = false;
 
         if (dependencies !== undefined) {
@@ -190,8 +196,15 @@ async function release(): Promise<void> {
                 const [dependencyAtOrganization, dependencyRepositoryName] = dependency.split("/");
 
                 if (dependencyAtOrganization === atOrganization) {
-                    dependencies[dependency] = !restoreAlpha ? `^${configuration.repositories[dependencyRepositoryName].version}` : "alpha";
-                    anyUpdated = true;
+                    const dependencyRepository = configuration.repositories[dependencyRepositoryName];
+
+                    // Skip explicit version for local dependency.
+                    if (dependencyRepository.local !== true) {
+                        dependencies[dependency] = !restoreAlpha ? `^${dependencyRepository.version}` : "alpha";
+                        anyUpdated = true;
+                    } else if (!development && local !== true) {
+                        throw new Error("Local dependency specified for non-local repository");
+                    }
                 }
             }
         }
@@ -249,8 +262,8 @@ async function release(): Promise<void> {
 
                     packageConfiguration.version = repository.version;
 
-                    updateDependencies(packageConfiguration.devDependencies, false);
-                    updateDependencies(packageConfiguration.dependencies, false);
+                    updateDependencies(true, repository.local, packageConfiguration.devDependencies, false);
+                    updateDependencies(false, repository.local, packageConfiguration.dependencies, false);
 
                     fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
                 } else {
@@ -402,8 +415,8 @@ async function release(): Promise<void> {
 
             await step(name, "restore alpha", () => {
                 // Restore dependencies to "alpha" version for development.
-                const devDependenciesUpdated = updateDependencies(packageConfiguration.devDependencies, true);
-                const dependenciesUpdated = updateDependencies(packageConfiguration.dependencies, true);
+                const devDependenciesUpdated = updateDependencies(true, repository.local, packageConfiguration.devDependencies, true);
+                const dependenciesUpdated = updateDependencies(false, repository.local, packageConfiguration.dependencies, true);
 
                 if (devDependenciesUpdated || dependenciesUpdated) {
                     fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
