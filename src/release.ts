@@ -6,8 +6,8 @@ import * as util from "node:util";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 
-import configurationJSON from "../config/release.json" assert { type: "json" };
-import secureConfigurationJSON from "../config/release.secure.json" assert { type: "json" };
+import configurationJSON from "../config/release.json";
+import secureConfigurationJSON from "../config/release.secure.json";
 import { run } from "./command-util.js";
 
 /**
