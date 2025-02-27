@@ -401,9 +401,8 @@ async function release(): Promise<void> {
                 await octokit.rest.repos.createRelease({
                     ...octokitParameterBase,
                     tag_name: tag,
-                    name: `${prerelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)} r` : "R"}elease ${versionSplit[0]}`,
-                    // TODO Remove "false" override.
-                    prerelease: false
+                    name: `${prerelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)}` : "Production"} release ${versionSplit[0]}`,
+                    prerelease
                 });
             });
 
