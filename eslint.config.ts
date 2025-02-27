@@ -1,3 +1,3 @@
-import { esLintConfigAIDCToolkit } from "./dist/index.js";
+import { esLintConfigAIDCToolkit } from "./dist";
 
 export default esLintConfigAIDCToolkit;
