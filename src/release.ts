@@ -39,9 +39,9 @@ interface Configuration {
         version: string;
 
         /**
-         * True if the repository is local (not published to public npm registry) and its version should not be used in dependencies.
+         * True if the package is for internal use only and its version should not be used in dependencies.
          */
-        local?: boolean;
+        internal?: boolean;
     }>;
 }
 
@@ -172,22 +172,22 @@ async function release(): Promise<void> {
     /**
      * Update dependencies from the organization.
      *
-     * @param development
-     * True if updating for development dependencies.
+     * @param restoreAlpha
+     * If true, restore "alpha" as the version for development.
      *
-     * @param local
-     * True if the repository is local (not published to public npm registry).
+     * @param development
+     * True if updating development dependencies.
+     *
+     * @param internal
+     * True if the package is for internal use only and its version should not be used in dependencies.
      *
      * @param dependencies
      * Dependencies.
      *
-     * @param restoreAlpha
-     * If true, "alpha" is restored as the version for development.
-     *
      * @returns
      * True if any dependencies were updated.
      */
-    function updateDependencies(development: boolean, local: boolean | undefined, dependencies: Record<string, string> | undefined, restoreAlpha: boolean): boolean {
+    function updateDependencies(restoreAlpha: boolean, development: boolean, internal: boolean | undefined, dependencies: Record<string, string> | undefined): boolean {
         let anyUpdated = false;
 
         if (dependencies !== undefined) {
@@ -199,11 +199,11 @@ async function release(): Promise<void> {
                     const dependencyRepository = configuration.repositories[dependencyRepositoryName];
 
                     // Skip explicit version for local dependency.
-                    if (dependencyRepository.local !== true) {
+                    if (dependencyRepository.internal !== true) {
                         dependencies[dependency] = !restoreAlpha ? `^${dependencyRepository.version}` : "alpha";
                         anyUpdated = true;
-                    } else if (!development && local !== true) {
-                        throw new Error("Local dependency specified for non-local repository");
+                    } else if (!restoreAlpha && !development && internal !== true) {
+                        throw new Error("Internal dependency specified for external package");
                     }
                 }
             }
@@ -262,8 +262,8 @@ async function release(): Promise<void> {
 
                     packageConfiguration.version = repository.version;
 
-                    updateDependencies(true, repository.local, packageConfiguration.devDependencies, false);
-                    updateDependencies(false, repository.local, packageConfiguration.dependencies, false);
+                    updateDependencies(false, true, repository.internal, packageConfiguration.devDependencies);
+                    updateDependencies(false, false, repository.internal, packageConfiguration.dependencies);
 
                     fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
                 } else {
@@ -414,8 +414,8 @@ async function release(): Promise<void> {
 
             await step(name, "restore alpha", () => {
                 // Restore dependencies to "alpha" version for development.
-                const devDependenciesUpdated = updateDependencies(true, repository.local, packageConfiguration.devDependencies, true);
-                const dependenciesUpdated = updateDependencies(false, repository.local, packageConfiguration.dependencies, true);
+                const devDependenciesUpdated = updateDependencies(true, true, repository.internal, packageConfiguration.devDependencies);
+                const dependenciesUpdated = updateDependencies(true, false, repository.internal, packageConfiguration.dependencies);
 
                 if (devDependenciesUpdated || dependenciesUpdated) {
                     fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);

@@ -18,11 +18,11 @@
     },
     "app-extension": {
       "version": "0.9.16-beta",
-      "local": true
+      "internal": true
     },
     "app-generator": {
       "version": "0.9.16-beta",
-      "local": true
+      "internal": true
     },
     "aidc-toolkit.github.io": {
       "directory": "doc",
