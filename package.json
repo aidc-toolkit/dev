@@ -25,11 +25,8 @@
     "build:dev": "npm run build:core -- tsconfig-build-dev-local.json",
     "build:release": "npm run build:core -- tsconfig-build-local.json",
     "build:doc": "npm run build:dev",
-    "publish-dev": "bin/publish-dev-local",
-    "release": "tsx src/release.ts"
-  },
-  "bin": {
-    "publish-dev": "bin/publish-dev"
+    "publish-internal": "tsx src/publish-internal.ts",
+    "publish-external": "tsx src/publish-external.ts"
   },
   "devDependencies": {
     "copy-files-from-to": "^3.12.1"
@@ -45,6 +42,7 @@
     "octokit": "^4.1.2",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
+    "tslog": "^4.9.3",
     "tsx": "^4.19.3",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.25.0",

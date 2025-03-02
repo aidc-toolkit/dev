@@ -1,0 +1,53 @@
+{
+  "organization": "aidc-toolkit",
+  "repositories": {
+    "dev": {
+      "dependencyType": "external",
+      "excludeFiles": [
+        "src/publish.ts",
+        "src/publish-internal.ts",
+        "src/publish-external.ts",
+        "config/publish.json",
+        "config/publish.secure.json"
+      ],
+      "lastExternalVersion": "0.9.16-beta",
+      "lastInternalPublished": "2025-03-02T19:42:30.219Z"
+    },
+    "core": {
+      "dependencyType": "external",
+      "lastExternalVersion": "0.9.16-beta",
+      "lastInternalPublished": "2025-03-02T19:46:27.439Z"
+    },
+    "utility": {
+      "dependencyType": "external",
+      "lastExternalVersion": "0.9.16-beta",
+      "lastInternalPublished": "2025-03-02T19:46:37.087Z"
+    },
+    "gs1": {
+      "dependencyType": "external",
+      "lastExternalVersion": "0.9.16-beta",
+      "lastInternalPublished": "2025-03-02T19:46:50.266Z"
+    },
+    "demo": {
+      "dependencyType": "none",
+      "lastExternalVersion": "0.9.16-beta"
+    },
+    "app-extension": {
+      "dependencyType": "internal",
+      "lastExternalVersion": "0.9.16-beta",
+      "internal": true,
+      "lastInternalPublished": "2025-03-02T19:47:50.192Z"
+    },
+    "app-generator": {
+      "dependencyType": "internal",
+      "lastExternalVersion": "0.9.16-beta",
+      "internal": true,
+      "lastInternalPublished": "2025-03-02T19:47:58.982Z"
+    },
+    "aidc-toolkit.github.io": {
+      "directory": "doc",
+      "dependencyType": "none",
+      "lastExternalVersion": "0.9.16-beta"
+    }
+  }
+}

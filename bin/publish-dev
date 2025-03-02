@@ -1,8 +1,0 @@
-#!/usr/bin/env node
-import { publishDev } from "@aidc-toolkit/dev";
-
-try {
-    publishDev();
-} catch (e) {
-    console.error(e);
-}
