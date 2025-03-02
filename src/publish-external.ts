@@ -163,8 +163,11 @@ await publishRepositories(async (name, repository) => {
         // Package version has already been updated, either manually or by previous failed run.
         publish = true;
     } else if (publish) {
+        const packageVersionSplits = packageConfiguration.version.split("-");
+
         // Extract semantic version and pre-release identifier.
-        const [semanticVersion, preReleaseIdentifier] = packageConfiguration.version.includes("-") ? packageConfiguration.version.split("-") : [packageConfiguration.version, ""];
+        const semanticVersion = packageVersionSplits[0];
+        const preReleaseIdentifier = packageVersionSplits.length !== 1 ? `-${packageVersionSplits[1]}` : "";
 
         // Parse semantic version into its components.
         const [majorVersion, minorVersion, patchVersion] = semanticVersion.split(".").map(versionString => Number(versionString));

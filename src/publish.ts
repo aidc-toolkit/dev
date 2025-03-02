@@ -121,9 +121,6 @@ export function organizationRepository(dependency: string): string | null {
  * False if comparing to the last internal published date/time, true if comparing to the last external published
  * date/time.
  *
- * @param allowUncommitted
- * True if uncommitted files are allowed.
- *
  * @returns
  * True if there is no last published date/time or if there have been any changes since then.
  */
@@ -219,7 +216,7 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
             }
         }
 
-        logger.debug("Changed");
+        logger.info("Changed");
 
         const lastPublished = new Date(lastPublishedString);
 
@@ -227,7 +224,7 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
 
         for (const changedFile of changedFilesSet) {
             if (fs.lstatSync(changedFile).mtime > lastPublished) {
-                logger.debug(`Changed: ${changedFile}`);
+                logger.info(`File: ${changedFile}`);
 
                 anyChanges = true;
             }
