@@ -31,7 +31,7 @@ export const logger = new Logger({
  * Output if captured or empty array if not.
  */
 export function run(captureOutput: boolean, command: string, ...args: string[]): string[] {
-    logger.debug(`Running command "${command}" with arguments ${JSON.stringify(args)}.`);
+    logger.trace(`Running command "${command}" with arguments ${JSON.stringify(args)}.`);
 
     const spawnResult = spawnSync(command, args, {
         stdio: ["inherit", captureOutput ? "pipe" : "inherit", "inherit"]
@@ -52,7 +52,7 @@ export function run(captureOutput: boolean, command: string, ...args: string[]):
     const output = captureOutput ? spawnResult.stdout.toString().split("\n").slice(0, -1) : [];
 
     if (captureOutput) {
-        logger.debug(`Output is ${JSON.stringify(output)}.`);
+        logger.trace(`Output is ${JSON.stringify(output)}.`);
     }
 
     return output;

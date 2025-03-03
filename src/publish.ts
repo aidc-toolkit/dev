@@ -135,13 +135,23 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
         for (const line of run(true, "git", "log", `--since="${lastPublishedString}"`, "--name-status", "--pretty=oneline")) {
             // Header starts with 40-character SHA.
             if (!/^[0-9a-f]{40} /.test(line)) {
-                const [status, file] = line.split("\t");
+                const [status, file, newFile] = line.split("\t");
 
                 // Ignore deleted files; anything that depends on a deleted file will have been modified.
-                if (status !== "D") {
-                    logger.debug(`+File: ${file}`);
+                if (!status.startsWith("D")) {
+                    if (status.startsWith("R")) {
+                        logger.debug(`-File: ${file}`);
 
-                    changedFilesSet.add(file);
+                        changedFilesSet.delete(file);
+
+                        logger.debug(`+File: ${newFile}`);
+
+                        changedFilesSet.add(newFile);
+                    } else {
+                        logger.debug(`+File: ${file}`);
+
+                        changedFilesSet.add(file);
+                    }
                 }
             } else {
                 logger.debug(`Commit SHA ${line.substring(0, 40)}`);
@@ -165,7 +175,7 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
                 const detail = line.substring(3);
 
                 // Ignore deleted files; anything that depends on a deleted file will have been modified.
-                if (status !== "D ") {
+                if (!status.startsWith("D")) {
                     let file: string;
 
                     if (status.startsWith("R")) {
