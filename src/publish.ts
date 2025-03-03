@@ -151,6 +151,7 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
      * New file name if status is "R", undefined otherwise.
      */
     function processChangedFile(status: string, file: string, newFile: string | undefined): void {
+        // Status is "D" if deleted, "R" if renamed.
         const deleteFile = status === "D" || status === "R" ? file : undefined;
         const addFile = status === "R" ? newFile : status !== "D" ? file : undefined;
 
@@ -160,12 +161,13 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
         }
 
         if (addFile !== undefined && !changedFilesSet.has(addFile)) {
-            // Ignore hidden files and directories except .github directory, as well as any explicitly excluded files.
+            // Exclude hidden files and directories except .github directory, as well as any explicitly excluded files.
             if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && !excludedFilesSet.has(addFile)) {
                 changedFilesSet.add(addFile);
 
                 logger.debug(`+${addFile}`);
             } else {
+                // File is excluded.
                 logger.debug(`*${addFile}`);
             }
         }

@@ -292,7 +292,7 @@ await publishRepositories(async (name, repository) => {
         });
 
         await runStep(repository, "commit", () => {
-            run(false, "git", "commit", "--all", `--message=Updated to version ${packageConfiguration.version}.`);
+            run(false, "git", "commit", "--all", "--message", `Updated to version ${packageConfiguration.version}.`);
         });
 
         await runStep(repository, "tag", () => {
@@ -335,7 +335,7 @@ await publishRepositories(async (name, repository) => {
             if (devDependenciesUpdated || dependenciesUpdated) {
                 fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
-                run(false, "git", "commit", packageConfigurationPath, "--message", "Restored alpha version.");
+                run(false, "git", "commit", packageConfigurationPath, "--message", "Restored alpha versions to organization dependencies.");
             }
         });
 

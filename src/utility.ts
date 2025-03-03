@@ -49,6 +49,7 @@ export function run(captureOutput: boolean, command: string, ...args: string[]):
         throw new Error(`Failed with status ${spawnResult.status}`);
     }
 
+    // Last line is also terminated by newline and split() places empty string at the end, so use slice() to remove it.
     const output = captureOutput ? spawnResult.stdout.toString().split("\n").slice(0, -1) : [];
 
     if (captureOutput) {

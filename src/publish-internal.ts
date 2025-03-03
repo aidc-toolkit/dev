@@ -66,7 +66,7 @@ await publishRepositories((_name, repository) => {
     if (organizationDependencies.length !== 0) {
         logger.debug(`Updating organization dependencies ${JSON.stringify(organizationDependencies)}`);
 
-        run(false, "npm", "update", ...organizationDependencies);
+        run(true, "npm", "update", ...organizationDependencies);
     }
 
     // Nothing further required if this repository is not a dependency.
@@ -92,16 +92,16 @@ await publishRepositories((_name, repository) => {
             fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
             // Run development build.
-            run(false, "npm", "run", "build:dev");
+            run(true, "npm", "run", "build:dev");
 
             // Publish to development npm registry.
-            run(false, "npm", "publish", "--tag", "alpha");
+            run(true, "npm", "publish", "--tag", "alpha");
 
             // Unpublish all prior alpha versions.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Output is a JSON array.
             for (const version of JSON.parse(run(true, "npm", "view", packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
                 if (/^[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+$/.test(version) && version !== packageConfiguration.version) {
-                    run(false, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
+                    run(true, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
                 }
             }
 
