@@ -260,6 +260,8 @@ export function saveConfiguration(): void {
 export async function publishRepositories(callback: (name: string, repository: Repository) => void | Promise<void>): Promise<void> {
     logger.settings.minLevel = 2;
 
+    const startDirectory = process.cwd();
+
     for (const [name, repository] of Object.entries(configuration.repositories)) {
         logger.info(`Repository ${name}...`);
 
@@ -270,4 +272,7 @@ export async function publishRepositories(callback: (name: string, repository: R
 
         saveConfiguration();
     }
+
+    // Return to the start directory.
+    process.chdir(startDirectory);
 }

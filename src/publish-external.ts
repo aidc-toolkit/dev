@@ -153,10 +153,24 @@ await publishRepositories(async (name, repository) => {
 
     let publish: boolean;
 
-    if (repository.publishExternalStep === undefined) {
-        publish = anyChanges(repository, true);
-    } else {
-        publish = true;
+    switch (repository.publishExternalStep) {
+        case undefined:
+            publish = anyChanges(repository, true);
+
+            if (publish && anyChanges(repository, false)) {
+                throw new Error("Repository has internal changes that have not been published");
+            }
+            break;
+
+        case "complete":
+            // Previous publication succeeded but subsequent repository failed; skip this repository.
+            publish = false;
+            break;
+
+        default:
+            // Previous publication failed.
+            publish = true;
+            break;
     }
 
     if (packageConfiguration.version !== repository.lastExternalVersion) {
@@ -325,8 +339,17 @@ await publishRepositories(async (name, repository) => {
 
         repository.lastExternalPublished = new Date().toISOString();
         repository.lastExternalVersion = packageConfiguration.version;
+        repository.publishExternalStep = "complete";
+    }
+}).then(() => {
+    // Publication complete; reset steps to undefined for next run.
+    for (const repository of Object.values(configuration.repositories)) {
         repository.publishExternalStep = undefined;
     }
+
+    saveConfiguration();
+
+    run(false, "git", "commit", "--all", "--message=Published externally.");
 }).catch((e: unknown) => {
     logger.error(e);
 });
