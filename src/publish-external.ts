@@ -155,7 +155,8 @@ await publishRepositories(async (name, repository) => {
 
     switch (repository.publishExternalStep) {
         case undefined:
-            publish = anyChanges(repository, true);
+            // Check for publish external always is done afterward so that check for uncommitted files can be done.
+            publish = anyChanges(repository, true) || repository.publishExternalAlways === true;
 
             if (publish && anyChanges(repository, false)) {
                 throw new Error("Repository has internal changes that have not been published");

@@ -29,6 +29,11 @@ export interface Repository {
     lastInternalPublished?: string;
 
     /**
+     * If true, publish repository externally always.
+     */
+    publishExternalAlways?: boolean;
+
+    /**
      * Date/time the package was last published externally in ISO format.
      */
     lastExternalPublished?: string;
