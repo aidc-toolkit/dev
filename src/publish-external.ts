@@ -4,7 +4,7 @@ import * as util from "node:util";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 import {
-    anyChanges,
+    anyChanges, commitConfiguration,
     configuration,
     organizationRepository, type PackageConfiguration,
     publishRepositories,
@@ -334,7 +334,8 @@ await publishRepositories(async (name, repository) => {
 
             if (devDependenciesUpdated || dependenciesUpdated) {
                 fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
-                run(false, "git", "commit", "--all", "--message=Restored alpha version.");
+
+                run(false, "git", "commit", packageConfigurationPath, "--message", "Restored alpha version.");
             }
         });
 
@@ -350,7 +351,7 @@ await publishRepositories(async (name, repository) => {
 
     saveConfiguration();
 
-    run(false, "git", "commit", "--all", "--message=Published externally.");
+    commitConfiguration(true);
 }).catch((e: unknown) => {
     logger.error(e);
 });

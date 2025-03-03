@@ -1,5 +1,11 @@
 import * as fs from "fs";
-import { anyChanges, organizationRepository, type PackageConfiguration, publishRepositories } from "./publish";
+import {
+    anyChanges,
+    commitConfiguration,
+    organizationRepository,
+    type PackageConfiguration,
+    publishRepositories
+} from "./publish";
 import { logger, run } from "./utility.js";
 
 /**
@@ -106,6 +112,8 @@ await publishRepositories((_name, repository) => {
             fs.renameSync(backupPackageConfigurationPath, packageConfigurationPath);
         }
     }
+}).then(() => {
+    commitConfiguration(false);
 }).catch((e: unknown) => {
     logger.error(e);
 });

@@ -134,32 +134,52 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
 
     const lastPublishedString = !external ? repository.lastInternalPublished : repository.lastExternalPublished;
 
+    const excludedFilesSet = new Set(repository.excludeFiles ?? []);
+
     const changedFilesSet = new Set<string>();
 
+    /**
+     * Process a changed file.
+     *
+     * @param status
+     * "R" if the file has been renamed, "D" if the file has been deleted, otherwise file has been added.
+     *
+     * @param file
+     * Original file name if status is "R", otherwise file to be added or deleted.
+     *
+     * @param newFile
+     * New file name if status is "R", undefined otherwise.
+     */
+    function processChangedFile(status: string, file: string, newFile: string | undefined): void {
+        const deleteFile = status === "D" || status === "R" ? file : undefined;
+        const addFile = status === "R" ? newFile : status !== "D" ? file : undefined;
+
+        // Remove deleted file; anything that depends on a deleted file will have been modified.
+        if (deleteFile !== undefined && changedFilesSet.delete(deleteFile)) {
+            logger.debug(`-${deleteFile}`);
+        }
+
+        if (addFile !== undefined && !changedFilesSet.has(addFile)) {
+            // Ignore hidden files and directories except .github directory, as well as any explicitly excluded files.
+            if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && !excludedFilesSet.has(addFile)) {
+                changedFilesSet.add(addFile);
+
+                logger.debug(`+${addFile}`);
+            } else {
+                logger.debug(`*${addFile}`);
+            }
+        }
+    }
+
     if (lastPublishedString !== undefined) {
-        for (const line of run(true, "git", "log", `--since="${lastPublishedString}"`, "--name-status", "--pretty=oneline")) {
+        for (const line of run(true, "git", "log", "--since", lastPublishedString, "--name-status", "--pretty=oneline")) {
             // Header starts with 40-character SHA.
-            if (!/^[0-9a-f]{40} /.test(line)) {
+            if (/^[0-9a-f]{40} /.test(line)) {
+                logger.debug(`Commit SHA ${line.substring(0, 40)}`);
+            } else {
                 const [status, file, newFile] = line.split("\t");
 
-                // Ignore deleted files; anything that depends on a deleted file will have been modified.
-                if (!status.startsWith("D")) {
-                    if (status.startsWith("R")) {
-                        logger.debug(`-File: ${file}`);
-
-                        changedFilesSet.delete(file);
-
-                        logger.debug(`+File: ${newFile}`);
-
-                        changedFilesSet.add(newFile);
-                    } else {
-                        logger.debug(`+File: ${file}`);
-
-                        changedFilesSet.add(file);
-                    }
-                }
-            } else {
-                logger.debug(`Commit SHA ${line.substring(0, 40)}`);
+                processChangedFile(status.charAt(0), file, newFile);
             }
         }
     }
@@ -168,6 +188,7 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
         const output = run(true, "git", "status", "--porcelain");
 
         if (output.length !== 0) {
+            // External publication requires that repository be fully committed.
             if (external) {
                 throw new Error("Repository has uncommitted changes");
             }
@@ -176,94 +197,54 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
 
             for (const line of output) {
                 // Line is two-character status, space, and detail.
-                const status = line.substring(0, 2);
-                const detail = line.substring(3);
+                const status = line.substring(0, 1);
+                const [file, newFile] = line.substring(3).split(" -> ");
 
-                // Ignore deleted files; anything that depends on a deleted file will have been modified.
-                if (!status.startsWith("D")) {
-                    let file: string;
-
-                    if (status.startsWith("R")) {
-                        // File has been renamed; get old and new file names.
-                        const [oldFile, newFile] = detail.split(" -> ");
-
-                        logger.debug(`-File: ${oldFile}`);
-
-                        changedFilesSet.delete(oldFile);
-
-                        file = newFile;
-                    } else {
-                        file = detail;
-                    }
-
-                    logger.debug(`+File: ${file}`);
-
-                    changedFilesSet.add(file);
-                }
+                processChangedFile(status, file, newFile);
             }
         }
     }
 
     if (lastPublishedString !== undefined) {
-        logger.debug("Excluded");
-
-        const hiddenFiles = [];
-
-        // Get list of hidden files and directories.
-        for (const changedFile of changedFilesSet) {
-            if (changedFile.startsWith(".") || changedFile.includes("/.")) {
-                hiddenFiles.push(changedFile);
-            }
-        }
-
-        // Exclude hidden files and directories.
-        for (const hiddenFile of hiddenFiles) {
-            logger.debug(`-File: ${hiddenFile}`);
-
-            changedFilesSet.delete(hiddenFile);
-        }
-
-        if (repository.excludeFiles !== undefined) {
-            for (const excludeFile of repository.excludeFiles) {
-                if (changedFilesSet.delete(excludeFile)) {
-                    logger.debug(`-File: ${excludeFile}`);
-                }
-            }
-        }
-
-        logger.info("Changed");
-
         const lastPublished = new Date(lastPublishedString);
 
         anyChanges = false;
 
         for (const changedFile of changedFilesSet) {
             if (fs.lstatSync(changedFile).mtime > lastPublished) {
-                logger.info(`File: ${changedFile}`);
+                if (!anyChanges) {
+                    anyChanges = true;
 
-                anyChanges = true;
+                    logger.info("Changes");
+                }
+
+                logger.info(`>${changedFile}`);
             }
+        }
+
+        if (!anyChanges) {
+            logger.info("No changes");
         }
     } else {
         // No last published, so there must have been changes.
         anyChanges = true;
-    }
 
-    if (!anyChanges) {
-        logger.debug("No changes");
+        logger.info("No last published");
     }
 
     return anyChanges;
 }
 
+const configurationPath = "config/publish.json";
+
 // Configuration may be written from any directory so full path is required.
-const configurationPath = path.resolve("config/publish.json");
+const configurationFullPath = path.resolve(configurationPath);
 
 /**
  * Save the current configuration.
  */
 export function saveConfiguration(): void {
-    fs.writeFileSync(configurationPath, `${JSON.stringify(configuration, null, 2)}\n`);
+    fs.writeFileSync(configurationFullPath, `${JSON.stringify(configuration, null, 2)}\n`);
 }
 
 /**
@@ -273,8 +254,6 @@ export function saveConfiguration(): void {
  * Callback taking the name and properties of the repository to publish.
  */
 export async function publishRepositories(callback: (name: string, repository: Repository) => void | Promise<void>): Promise<void> {
-    logger.settings.minLevel = 2;
-
     const startDirectory = process.cwd();
 
     for (const [name, repository] of Object.entries(configuration.repositories)) {
@@ -290,4 +269,17 @@ export async function publishRepositories(callback: (name: string, repository: R
 
     // Return to the start directory.
     process.chdir(startDirectory);
+}
+
+/**
+ * Commit the current configuration.
+ *
+ * @param external
+ * False if committing due to internal publication, true if committing due to external publication.
+ */
+export function commitConfiguration(external: boolean): void {
+    // Check for changes before committing.
+    if (run(true, "git", "status", configurationPath, "--porcelain").length !== 0) {
+        run(false, "git", "commit", configurationPath, "--message", !external ? "Published internally." : "Published externally.");
+    }
 }
