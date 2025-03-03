@@ -10,25 +10,25 @@
         "config/publish.json",
         "config/publish.secure.json"
       ],
-      "lastInternalPublished": "2025-03-02T19:42:30.219Z",
+      "lastInternalPublished": "2025-03-03T04:03:51.933Z",
       "lastExternalPublished": "2025-03-02T22:50:20.357Z",
       "lastExternalVersion": "0.9.17-beta"
     },
     "core": {
       "dependencyType": "external",
-      "lastInternalPublished": "2025-03-02T19:46:27.439Z",
+      "lastInternalPublished": "2025-03-03T04:03:55.964Z",
       "lastExternalPublished": "2025-03-02T22:50:20.372Z",
       "lastExternalVersion": "0.9.17-beta"
     },
     "utility": {
       "dependencyType": "external",
-      "lastInternalPublished": "2025-03-02T19:46:37.087Z",
+      "lastInternalPublished": "2025-03-03T04:03:59.303Z",
       "lastExternalPublished": "2025-03-02T22:43:30.438Z",
       "lastExternalVersion": "0.9.17-beta"
     },
     "gs1": {
       "dependencyType": "external",
-      "lastInternalPublished": "2025-03-02T19:46:50.266Z",
+      "lastInternalPublished": "2025-03-03T04:04:02.912Z",
       "lastExternalPublished": "2025-03-02T22:52:24.105Z",
       "lastExternalVersion": "0.9.17-beta"
     },
@@ -39,13 +39,13 @@
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-02T19:47:50.192Z",
+      "lastInternalPublished": "2025-03-03T04:04:12.698Z",
       "lastExternalPublished": "2025-03-02T22:53:47.379Z",
       "lastExternalVersion": "0.9.17-beta"
     },
     "app-generator": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-02T19:47:58.982Z",
+      "lastInternalPublished": "2025-03-03T04:04:15.523Z",
       "lastExternalPublished": "2025-03-02T22:53:50.359Z",
       "lastExternalVersion": "0.9.17-beta"
     },
