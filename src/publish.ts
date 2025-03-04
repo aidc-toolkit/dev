@@ -161,8 +161,8 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
         }
 
         if (addFile !== undefined && !changedFilesSet.has(addFile)) {
-            // Exclude hidden files and directories except .github directory, as well as any explicitly excluded files.
-            if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && !excludedFilesSet.has(addFile)) {
+            // Exclude hidden files and directories except .github directory, as well as test directory and any explicitly excluded files.
+            if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && !addFile.startsWith("test/") && !excludedFilesSet.has(addFile)) {
                 changedFilesSet.add(addFile);
 
                 logger.debug(`+${addFile}`);
