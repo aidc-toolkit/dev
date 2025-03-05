@@ -58,6 +58,10 @@ export const esLintConfigAIDCToolkit = tseslint.config(
                 allowSingleLine: false
             }],
             "@stylistic/comma-dangle": ["error", "never"],
+            "@stylistic/generator-star-spacing": ["error", {
+                before: true,
+                after: true
+            }],
             "@stylistic/indent": ["error", 4],
             "@stylistic/member-delimiter-style": ["error", {
                 multiline: {
@@ -83,6 +87,10 @@ export const esLintConfigAIDCToolkit = tseslint.config(
                 }
             }],
             "@stylistic/object-property-newline": "error",
+            "@stylistic/yield-star-spacing": ["error", {
+                before: true,
+                after: true
+            }],
 
             "jsdoc/require-description": ["warn", {
                 contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
