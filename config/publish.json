@@ -10,7 +10,7 @@
         "config/publish.json",
         "config/publish.secure.json"
       ],
-      "lastInternalPublished": "2025-03-04T22:37:59.326Z",
+      "lastInternalPublished": "2025-03-05T14:09:10.253Z",
       "lastExternalPublished": "2025-03-02T22:50:20.357Z",
       "lastExternalVersion": "0.9.17-beta"
     },
@@ -39,7 +39,7 @@
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-03T04:04:12.698Z",
+      "lastInternalPublished": "2025-03-05T14:09:50.150Z",
       "lastExternalPublished": "2025-03-02T22:53:47.379Z",
       "lastExternalVersion": "0.9.17-beta"
     },
