@@ -8,34 +8,46 @@ import {
 } from "./publish";
 import { logger, run } from "./utility.js";
 
+// Detailed syntax checking not required as this is an internal tool.
+const updateAll = process.argv[2] === "--update-all";
+
 /**
- * Check dependencies for belonging to the organization; if not, check for updates and log a message if an update is
- * available.
+ * Check dependencies for belonging to the organization; if not, check for updates and log a message, and optionally
+ * update, if an update is available.
  *
  * @param dependencies
  * Dependencies.
  *
  * @returns
- * Dependencies belonging to the organization.
+ * Dependencies belonging to the organization if not updating all, or external dependencies pending update if updating
+ * all.
  */
 function checkDependencyUpdates(dependencies?: Record<string, string>): string[] {
-    const organizationDependencies = [];
+    const dependencyUpdates = [];
 
     if (dependencies !== undefined) {
         for (const [dependency, version] of Object.entries(dependencies)) {
             if (organizationRepository(dependency) !== null) {
-                organizationDependencies.push(dependency);
+                if (!updateAll) {
+                    dependencyUpdates.push(dependency);
+                }
             } else if (version.startsWith("^")) {
                 const [latestVersion] = run(true, "npm", "view", dependency, "version");
 
                 if (latestVersion !== version.substring(1)) {
-                    logger.info(`Dependency ${dependency}@${version} pending update to version ${latestVersion}.`);
+                    logger.info(`Dependency ${dependency}@${version} ${!updateAll ? "pending update" : "updating"} to version ${latestVersion}.`);
+
+                    if (updateAll) {
+                        dependencies[dependency] = `^${latestVersion}`;
+
+                        dependencyUpdates.push(dependency);
+                    }
                 }
             }
         }
     }
 
-    return organizationDependencies;
+    return dependencyUpdates;
 }
 
 /**
@@ -61,13 +73,30 @@ await publishRepositories((_name, repository) => {
     const packageConfiguration: PackageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString());
 
     // Check dependency updates, even if there are no changes.
-    const organizationDependencies = [...checkDependencyUpdates(packageConfiguration.devDependencies), ...checkDependencyUpdates(packageConfiguration.dependencies)];
+    const dependencyUpdates = [...checkDependencyUpdates(packageConfiguration.devDependencies), ...checkDependencyUpdates(packageConfiguration.dependencies)];
 
-    if (organizationDependencies.length !== 0) {
-        logger.debug(`Updating organization dependencies ${JSON.stringify(organizationDependencies)}`);
+    if (!updateAll) {
+        if (dependencyUpdates.length !== 0) {
+            logger.debug(`Updating organization dependencies ${JSON.stringify(dependencyUpdates)}`);
 
-        run(true, "npm", "update", ...organizationDependencies);
+            run(false, "npm", "update", ...dependencyUpdates);
+        }
+    } else {
+        if (dependencyUpdates.length !== 0) {
+            // Update the package configuration for the update.
+            fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+        }
+
+        logger.debug("Updating all dependencies");
+
+        run(false, "npm", "update");
     }
+
+    // Run lint if present.
+    run(false, "npm", "run", "lint", "--if-present");
+
+    // Run development build if present.
+    run(false, "npm", "run", "build:dev", "--if-present");
 
     // Nothing further required if this repository is not a dependency.
     if (repository.dependencyType !== "none" && anyChanges(repository, false)) {
@@ -91,17 +120,14 @@ await publishRepositories((_name, repository) => {
             // Update the package configuration for the build.
             fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
-            // Run development build.
-            run(true, "npm", "run", "build:dev");
-
             // Publish to development npm registry.
-            run(true, "npm", "publish", "--tag", "alpha");
+            run(false, "npm", "publish", "--tag", "alpha");
 
             // Unpublish all prior alpha versions.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Output is a JSON array.
             for (const version of JSON.parse(run(true, "npm", "view", packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
                 if (/^[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+$/.test(version) && version !== packageConfiguration.version) {
-                    run(true, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
+                    run(false, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
                 }
             }
 

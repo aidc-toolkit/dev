@@ -25,7 +25,7 @@
     "build:dev": "npm run build:core -- tsconfig-build-dev-local.json",
     "build:release": "npm run build:core -- tsconfig-build-local.json",
     "build:doc": "npm run build:dev",
-    "publish-internal": "tsx src/publish-internal.ts",
+    "publish-internal": "tsx src/publish-internal.ts $*",
     "publish-external": "tsx src/publish-external.ts"
   },
   "devDependencies": {
