@@ -1,12 +1,14 @@
 import * as fs from "fs";
 import * as path from "node:path";
-import * as util from "node:util";
+import { setTimeout } from "node:timers/promises";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 import {
-    anyChanges, commitConfiguration,
+    anyChanges,
+    commitConfiguration,
     configuration,
-    organizationRepository, type PackageConfiguration,
+    organizationRepository,
+    type PackageConfiguration,
     publishRepositories,
     type Repository,
     saveConfiguration,
@@ -247,7 +249,7 @@ await publishRepositories(async (name, repository) => {
             let workflowRunID = -1;
 
             do {
-                await util.promisify(setTimeout)(2000);
+                await setTimeout(2000);
 
                 const response = await octokit.rest.actions.listWorkflowRunsForRepo({
                     ...octokitParameterBase,
