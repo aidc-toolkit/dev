@@ -22,13 +22,13 @@
     },
     "utility": {
       "dependencyType": "external",
-      "lastInternalPublished": "2025-03-08T12:02:25.281Z",
+      "lastInternalPublished": "2025-03-09T18:27:17.751Z",
       "lastExternalPublished": "2025-03-02T22:43:30.438Z",
       "lastExternalVersion": "0.9.17-beta"
     },
     "gs1": {
       "dependencyType": "external",
-      "lastInternalPublished": "2025-03-08T12:02:38.905Z",
+      "lastInternalPublished": "2025-03-09T18:24:46.032Z",
       "lastExternalPublished": "2025-03-02T22:52:24.105Z",
       "lastExternalVersion": "0.9.17-beta"
     },
@@ -39,7 +39,7 @@
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-09T17:44:34.090Z",
+      "lastInternalPublished": "2025-03-09T18:27:37.099Z",
       "lastExternalPublished": "2025-03-02T22:53:47.379Z",
       "lastExternalVersion": "0.9.17-beta"
     },
