@@ -22,7 +22,7 @@
     },
     "utility": {
       "dependencyType": "external",
-      "lastInternalPublished": "2025-03-09T18:27:17.751Z",
+      "lastInternalPublished": "2025-03-09T18:44:50.114Z",
       "lastExternalPublished": "2025-03-02T22:43:30.438Z",
       "lastExternalVersion": "0.9.17-beta"
     },
@@ -39,7 +39,7 @@
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-09T18:27:37.099Z",
+      "lastInternalPublished": "2025-03-09T19:00:53.965Z",
       "lastExternalPublished": "2025-03-02T22:53:47.379Z",
       "lastExternalVersion": "0.9.17-beta"
     },
