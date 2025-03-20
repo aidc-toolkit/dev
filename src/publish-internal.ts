@@ -66,7 +66,9 @@ function zeroPadded(n: number, length: number): string {
     return `${"0".repeat(length - 1)}${n}`.slice(-length);
 }
 
-await publishRepositories((_name, repository) => {
+const dependencyDependenciesMap = new Map<string, string[]>();
+
+await publishRepositories((name, repository) => {
     const packageConfigurationPath = "package.json";
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Package configuration format is known.
@@ -77,9 +79,36 @@ await publishRepositories((_name, repository) => {
 
     if (!updateAll) {
         if (dependencyUpdates.length !== 0) {
-            logger.debug(`Updating organization dependencies ${JSON.stringify(dependencyUpdates)}`);
+            dependencyDependenciesMap.set(name, dependencyUpdates);
 
-            run(false, "npm", "update", ...dependencyUpdates);
+            const allDependencyUpdates = new Array<string>();
+
+            /**
+             * Add all dependency updates and those of their dependencies.
+             *
+             * @param dependencies
+             * Dependencies.
+             */
+            function addAllDependencyUpdates(dependencies: string[]): void {
+                for (const dependency of dependencies) {
+                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- Dependency is an organization repository.
+                    const dependencyDependencies = dependencyDependenciesMap.get(organizationRepository(dependency)!);
+
+                    if (dependencyDependencies !== undefined) {
+                        addAllDependencyUpdates(dependencyDependencies);
+                    }
+
+                    if (!allDependencyUpdates.includes(dependency)) {
+                        allDependencyUpdates.push(dependency);
+                    }
+                }
+            }
+
+            addAllDependencyUpdates(dependencyUpdates);
+
+            logger.debug(`Updating organization dependencies ${JSON.stringify(allDependencyUpdates)}`);
+
+            run(false, "npm", "update", ...allDependencyUpdates);
         }
     } else {
         if (dependencyUpdates.length !== 0) {
