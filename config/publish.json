@@ -39,13 +39,13 @@
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-15T00:59:06.261Z",
+      "lastInternalPublished": "2025-03-20T10:48:12.349Z",
       "lastExternalPublished": "2025-03-02T22:53:47.379Z",
       "lastExternalVersion": "0.9.17-beta"
     },
     "app-generator": {
       "dependencyType": "internal",
-      "lastInternalPublished": "2025-03-12T14:21:01.610Z",
+      "lastInternalPublished": "2025-03-20T10:48:17.251Z",
       "lastExternalPublished": "2025-03-02T22:53:50.359Z",
       "lastExternalVersion": "0.9.17-beta"
     },
