@@ -71,8 +71,8 @@ const dependencyDependenciesMap = new Map<string, string[]>();
 await publishRepositories((name, repository) => {
     const packageConfigurationPath = "package.json";
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Package configuration format is known.
-    const packageConfiguration: PackageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString());
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Package configuration format is known.
+    const packageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString()) as PackageConfiguration;
 
     // Check dependency updates, even if there are no changes.
     const dependencyUpdates = [...checkDependencyUpdates(packageConfiguration.devDependencies), ...checkDependencyUpdates(packageConfiguration.dependencies)];

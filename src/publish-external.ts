@@ -150,8 +150,8 @@ await publishRepositories(async (name, repository) => {
 
     const packageConfigurationPath = "package.json";
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment -- Package configuration format is known.
-    const packageConfiguration: PackageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString());
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Package configuration format is known.
+    const packageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString()) as PackageConfiguration;
 
     let publish: boolean;
 
@@ -290,7 +290,7 @@ await publishRepositories(async (name, repository) => {
         });
 
         await runStep(repository, "build", () => {
-            run(false, "npm", "run", "build", "--if-present");
+            run(false, "npm", "run", "build:release", "--if-present");
         });
 
         await runStep(repository, "commit", () => {
