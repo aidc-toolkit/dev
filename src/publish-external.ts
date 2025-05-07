@@ -54,8 +54,7 @@ interface WorkflowConfiguration {
 /**
  * Supported steps.
  */
-type Step =
-    "skipped" | "install" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "restore alpha" | "complete";
+type Step = "skipped" | "install" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "restore alpha" | "complete";
 
 /**
  * Execute a step.
