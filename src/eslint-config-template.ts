@@ -28,8 +28,8 @@ export const esLintConfigAIDCToolkit = tseslint.config(
             "complexity": "off",
             "max-depth": ["error", 10],
             "max-lines": "off",
-            "no-dupe-class-members": "off",
-            "no-redeclare": "off",
+
+            // Handled by @typescript-eslint/no-unused-vars.
             "no-unused-vars": "off",
 
             "@typescript-eslint/class-literal-property-style": "off",
