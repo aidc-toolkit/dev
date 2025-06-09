@@ -24,6 +24,11 @@ export interface Repository {
     excludeFiles?: string[];
 
     /**
+     * If true, only external publication is supported.
+     */
+    externalOnly?: boolean;
+
+    /**
      * Date/time the package was last published internally in ISO format.
      */
     lastInternalPublished?: string;

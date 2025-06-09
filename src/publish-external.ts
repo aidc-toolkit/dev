@@ -166,46 +166,43 @@ await publishRepositories(async (name, repository) => {
 
     let publish: boolean;
 
-    switch (repository.publishExternalStep) {
-        case undefined:
+    if (repository.publishExternalStep === "complete") {
+        // Previous publication succeeded but subsequent repository failed; skip this repository.
+        publish = false;
+    } else {
+        if (repository.publishExternalStep === undefined) {
             // Check for publish external always is done afterward so that check for uncommitted files can be done.
             publish = anyChanges(repository, true) || repository.publishExternalAlways === true;
 
-            if (publish && anyChanges(repository, false)) {
+            // Check for internal changes if internal publication supported.
+            if (!(repository.externalOnly ?? false) && publish && anyChanges(repository, false)) {
                 throw new Error("Repository has internal changes that have not been published");
             }
-            break;
-
-        case "complete":
-            // Previous publication succeeded but subsequent repository failed; skip this repository.
-            publish = false;
-            break;
-
-        default:
+        } else {
             // Previous publication failed.
             publish = true;
-            break;
+        }
+
+        if (packageVersion !== repository.lastExternalVersion) {
+            // Package version has already been updated, either manually or by previous failed run, so publish regardless.
+            publish = true;
+        } else if (publish) {
+            // Increment patch version number.
+            packageVersion = `${majorVersion}.${minorVersion}.${patchVersion + 1}${preReleaseIdentifier}`;
+            packageConfiguration.version = packageVersion;
+        }
     }
-
-    if (packageVersion !== repository.lastExternalVersion) {
-        // Package version has already been updated, either manually or by previous failed run.
-        publish = true;
-    } else if (publish) {
-        // Increment patch version number.
-        packageVersion = `${majorVersion}.${minorVersion}.${patchVersion + 1}${preReleaseIdentifier}`;
-        packageConfiguration.version = packageVersion;
-    }
-
-    const tag = `v${packageVersion}`;
-
-    const octokitParameterBase = {
-        owner: configuration.organization,
-        repo: name
-    };
-
-    const internal = repository.dependencyType === "internal";
 
     if (publish) {
+        const tag = `v${packageVersion}`;
+
+        const octokitParameterBase = {
+            owner: configuration.organization,
+            repo: name
+        };
+
+        const internal = repository.dependencyType === "internal";
+
         if (repository.publishExternalStep === undefined) {
             updateDependencies(false, true, internal, packageConfiguration.devDependencies);
             updateDependencies(false, false, internal, packageConfiguration.dependencies);
@@ -245,7 +242,7 @@ await publishRepositories(async (name, repository) => {
          * Validate the workflow by waiting for it to complete.
          */
         async function validateWorkflow(): Promise<void> {
-            const commitSHA = run(true, "git", "rev-parse", "HEAD")[0];
+            const commitSHA = run(true, "git", "rev-parse", branch)[0];
 
             let completed = false;
             let queryCount = 0;
