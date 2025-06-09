@@ -142,15 +142,27 @@ const octokit = new Octokit({
 });
 
 await publishRepositories(async (name, repository) => {
-    // Repository must be on main branch.
-    if (run(true, "git", "branch", "--show-current")[0] !== "main") {
-        throw new Error("Repository is not on main branch");
-    }
-
     const packageConfigurationPath = "package.json";
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Package configuration format is known.
     const packageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString()) as PackageConfiguration;
+
+    let packageVersion = packageConfiguration.version;
+
+    const packageVersionSplits = packageVersion.split("-");
+
+    // Extract semantic version and pre-release identifier.
+    const semanticVersion = packageVersionSplits[0];
+    const preReleaseIdentifier = packageVersionSplits.length !== 1 ? `-${packageVersionSplits[1]}` : "";
+
+    // Parse semantic version into its components.
+    const [majorVersion, minorVersion, patchVersion] = semanticVersion.split(".").map(versionString => Number(versionString));
+
+    // Local code must be on branch matching version.
+    const branch = run(true, "git", "branch", "--show-current")[0];
+    if (branch !== `v${majorVersion}.${minorVersion}`) {
+        throw new Error(`Repository must be on version branch ${branch}`);
+    }
 
     let publish: boolean;
 
@@ -175,24 +187,16 @@ await publishRepositories(async (name, repository) => {
             break;
     }
 
-    if (packageConfiguration.version !== repository.lastExternalVersion) {
+    if (packageVersion !== repository.lastExternalVersion) {
         // Package version has already been updated, either manually or by previous failed run.
         publish = true;
     } else if (publish) {
-        const packageVersionSplits = packageConfiguration.version.split("-");
-
-        // Extract semantic version and pre-release identifier.
-        const semanticVersion = packageVersionSplits[0];
-        const preReleaseIdentifier = packageVersionSplits.length !== 1 ? `-${packageVersionSplits[1]}` : "";
-
-        // Parse semantic version into its components.
-        const [majorVersion, minorVersion, patchVersion] = semanticVersion.split(".").map(versionString => Number(versionString));
-
         // Increment patch version number.
-        packageConfiguration.version = `${majorVersion}.${minorVersion}.${patchVersion + 1}${preReleaseIdentifier}`;
+        packageVersion = `${majorVersion}.${minorVersion}.${patchVersion + 1}${preReleaseIdentifier}`;
+        packageConfiguration.version = packageVersion;
     }
 
-    const tag = `v${packageConfiguration.version}`;
+    const tag = `v${packageVersion}`;
 
     const octokitParameterBase = {
         owner: configuration.organization,
@@ -223,7 +227,7 @@ await publishRepositories(async (name, repository) => {
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Workflow configuration format is known.
                 const workflowOn = (yamlParse(fs.readFileSync(path.resolve(workflowsPath, workflowFile)).toString()) as WorkflowConfiguration).on;
 
-                if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("main"))) {
+                if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("v*"))) {
                     logger.debug("Repository has push workflow");
 
                     hasPushWorkflow = true;
@@ -293,7 +297,7 @@ await publishRepositories(async (name, repository) => {
         });
 
         await runStep(repository, "commit", () => {
-            run(false, "git", "commit", "--all", "--message", `Updated to version ${packageConfiguration.version}.`);
+            run(false, "git", "commit", "--all", "--message", `Updated to version ${packageVersion}.`);
         });
 
         await runStep(repository, "tag", () => {
@@ -301,7 +305,7 @@ await publishRepositories(async (name, repository) => {
         });
 
         await runStep(repository, "push", () => {
-            run(false, "git", "push", "--atomic", "origin", "main", tag);
+            run(false, "git", "push", "--atomic", "origin", branch, tag);
         });
 
         if (hasPushWorkflow) {
@@ -311,7 +315,7 @@ await publishRepositories(async (name, repository) => {
         }
 
         await runStep(repository, "release", async () => {
-            const versionSplit = packageConfiguration.version.split("-");
+            const versionSplit = packageVersion.split("-");
             const prerelease = versionSplit.length !== 1;
 
             await octokit.rest.repos.createRelease({
@@ -341,7 +345,7 @@ await publishRepositories(async (name, repository) => {
         });
 
         repository.lastExternalPublished = new Date().toISOString();
-        repository.lastExternalVersion = packageConfiguration.version;
+        repository.lastExternalVersion = packageVersion;
         repository.publishExternalStep = "complete";
     }
 }).then(() => {

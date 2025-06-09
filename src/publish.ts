@@ -191,9 +191,9 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
 
         if (output.length !== 0) {
             // External publication requires that repository be fully committed.
-            if (external) {
-                throw new Error("Repository has uncommitted changes");
-            }
+            // if (external) {
+            //     throw new Error("Repository has uncommitted changes");
+            // }
 
             logger.debug("Uncommitted");
 
