@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import {
     anyChanges,
+    atOrganizationRegistry,
     commitConfiguration,
     organizationRepository,
     type PackageConfiguration,
@@ -108,7 +109,7 @@ await publishRepositories((name, repository) => {
 
             logger.debug(`Updating organization dependencies ${JSON.stringify(allDependencyUpdates)}`);
 
-            run(false, "npm", "update", ...allDependencyUpdates);
+            run(false, "npm", "update", atOrganizationRegistry, ...allDependencyUpdates);
         }
     } else {
         if (dependencyUpdates.length !== 0) {
@@ -118,7 +119,7 @@ await publishRepositories((name, repository) => {
 
         logger.debug("Updating all dependencies");
 
-        run(false, "npm", "update");
+        run(false, "npm", "update", atOrganizationRegistry);
     }
 
     // Run lint if present.
@@ -150,13 +151,13 @@ await publishRepositories((name, repository) => {
             fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
 
             // Publish to development npm registry.
-            run(false, "npm", "publish", "--tag", "alpha");
+            run(false, "npm", "publish", atOrganizationRegistry, "--tag", "alpha");
 
             // Unpublish all prior alpha versions.
             // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Output is a JSON array.
-            for (const version of JSON.parse(run(true, "npm", "view", packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
+            for (const version of JSON.parse(run(true, "npm", "view", atOrganizationRegistry, packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
                 if (/^[0-9]+.[0-9]+.[0-9]+-alpha.[0-9]+$/.test(version) && version !== packageConfiguration.version) {
-                    run(false, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
+                    run(false, "npm", "unpublish", atOrganizationRegistry, `${packageConfiguration.name}@${version}`);
                 }
             }
 

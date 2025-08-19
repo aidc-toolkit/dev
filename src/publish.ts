@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import configurationJSON from "../config/publish.json";
-import secureConfigurationJSON from "../config/publish.secure.json";
+import localConfigurationJSON from "../config/publish.local.json";
 import { logger, run } from "./utility";
 
 /**
@@ -55,7 +55,7 @@ export interface Repository {
 }
 
 /**
- * Configuration layout of publish.json.
+ * Configuration layout of merged publish.json and publish.local.json.
  */
 export interface Configuration {
     /**
@@ -64,16 +64,14 @@ export interface Configuration {
     organization: string;
 
     /**
+     * Registry hosting organization's repositories.
+     */
+    registry: string;
+
+    /**
      * Repositories.
      */
     repositories: Record<string, Repository>;
-}
-
-/**
- * Configuration layout of publish.secure.json.
- */
-interface SecureConfiguration {
-    token: string;
 }
 
 /**
@@ -101,10 +99,14 @@ export interface PackageConfiguration {
     dependencies?: Record<string, string>;
 }
 
-export const configuration: Configuration = configurationJSON;
-export const secureConfiguration: SecureConfiguration = secureConfigurationJSON;
+export const configuration: Configuration = {
+    ...configurationJSON,
+    ...localConfigurationJSON
+};
 
 const atOrganization = `@${configuration.organization}`;
+
+export const atOrganizationRegistry = `--${atOrganization}:registry=${configuration.registry}`;
 
 /**
  * Get the organization repository name or a dependency if it belongs to the organization or null if not.

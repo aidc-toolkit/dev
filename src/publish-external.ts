@@ -3,6 +3,7 @@ import * as path from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
+import secureConfigurationJSON from "../config/publish.secure.json";
 import {
     anyChanges,
     commitConfiguration,
@@ -11,10 +12,18 @@ import {
     type PackageConfiguration,
     publishRepositories,
     type Repository,
-    saveConfiguration,
-    secureConfiguration
+    saveConfiguration
 } from "./publish";
 import { logger, run } from "./utility.js";
+
+/**
+ * Configuration layout of publish.secure.json.
+ */
+interface SecureConfiguration {
+    token: string;
+}
+
+const secureConfiguration: SecureConfiguration = secureConfigurationJSON;
 
 /**
  * Configuration layout of release.yml workflow (relevant attributes only).
