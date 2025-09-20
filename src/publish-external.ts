@@ -74,20 +74,20 @@ type Step = "skipped" | "install" | "build" | "commit" | "tag" | "push" | "workf
  * @param step
  * State at which step takes place.
  *
- * @param callback
+ * @param stepRunner
  * Callback to execute step.
  *
  * @returns
  * Promise.
  */
-async function runStep(repository: Repository, step: Step, callback: () => (void | Promise<void>)): Promise<void> {
+async function runStep(repository: Repository, step: Step, stepRunner: () => (void | Promise<void>)): Promise<void> {
     if (repository.publishExternalStep === undefined || repository.publishExternalStep === step) {
         logger.debug(`Running step ${step}`);
 
         repository.publishExternalStep = step;
 
         try {
-            const result = callback();
+            const result = stepRunner();
 
             if (result instanceof Promise) {
                 await result;

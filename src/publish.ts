@@ -289,10 +289,10 @@ export function saveConfiguration(): void {
 /**
  * Publish all repositories.
  *
- * @param callback
+ * @param publishRepository
  * Callback taking the name and properties of the repository to publish.
  */
-export async function publishRepositories(callback: (name: string, repository: Repository) => void | Promise<void>): Promise<void> {
+export async function publishRepositories(publishRepository: (name: string, repository: Repository) => void | Promise<void>): Promise<void> {
     const startDirectory = process.cwd();
 
     for (const [name, repository] of Object.entries(configuration.repositories)) {
@@ -301,7 +301,7 @@ export async function publishRepositories(callback: (name: string, repository: R
         // All repositories are expected to be children of the parent of this repository.
         process.chdir(`../${repository.directory ?? name}`);
 
-        await callback(name, repository);
+        await publishRepository(name, repository);
 
         saveConfiguration();
     }
