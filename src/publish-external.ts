@@ -5,11 +5,16 @@ import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 import secureConfigurationJSON from "../config/publish.secure.json";
 import {
+    buildPackageVersion,
+    loadPackageConfiguration, PACKAGE_CONFIGURATION_PATH,
+    parsePackageVersion,
+    savePackageConfiguration
+} from "./package-configuration";
+import {
     anyChanges,
     commitConfiguration,
     configuration,
     organizationRepository,
-    type PackageConfiguration,
     publishRepositories,
     type Repository,
     saveConfiguration
@@ -151,25 +156,13 @@ const octokit = new Octokit({
 });
 
 await publishRepositories(async (name, repository) => {
-    const packageConfigurationPath = "package.json";
+    const packageConfiguration = loadPackageConfiguration();
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Package configuration format is known.
-    const packageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString()) as PackageConfiguration;
-
-    let packageVersion = packageConfiguration.version;
-
-    const packageVersionSplits = packageVersion.split("-");
-
-    // Extract semantic version and pre-release identifier.
-    const semanticVersion = packageVersionSplits[0];
-    const preReleaseIdentifier = packageVersionSplits.length !== 1 ? `-${packageVersionSplits[1]}` : "";
-
-    // Parse semantic version into its components.
-    const [majorVersion, minorVersion, patchVersion] = semanticVersion.split(".").map(versionString => Number(versionString));
+    const parsedPackageVersion = parsePackageVersion(packageConfiguration.version);
 
     // Local code must be on branch matching version.
     const branch = run(true, "git", "branch", "--show-current")[0];
-    if (branch !== `v${majorVersion}.${minorVersion}`) {
+    if (branch !== `v${parsedPackageVersion.majorVersion}.${parsedPackageVersion.minorVersion}`) {
         throw new Error(`Repository must be on version branch ${branch}`);
     }
 
@@ -192,18 +185,18 @@ await publishRepositories(async (name, repository) => {
             publish = true;
         }
 
-        if (packageVersion !== repository.lastExternalVersion) {
+        if (packageConfiguration.version !== repository.lastExternalVersion) {
             // Package version has already been updated, either manually or by previous failed run, so publish regardless.
             publish = true;
         } else if (publish) {
             // Increment patch version number.
-            packageVersion = `${majorVersion}.${minorVersion}.${patchVersion + 1}${preReleaseIdentifier}`;
-            packageConfiguration.version = packageVersion;
+            parsedPackageVersion.patchVersion++;
+            packageConfiguration.version = buildPackageVersion(parsedPackageVersion);
         }
     }
 
     if (publish) {
-        const tag = `v${packageVersion}`;
+        const tag = `v${packageConfiguration.version}`;
 
         const octokitParameterBase = {
             owner: configuration.organization,
@@ -216,7 +209,7 @@ await publishRepositories(async (name, repository) => {
             updateDependencies(false, true, internal, packageConfiguration.devDependencies);
             updateDependencies(false, false, internal, packageConfiguration.dependencies);
 
-            fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+            savePackageConfiguration(packageConfiguration);
         } else {
             logger.debug(`Repository failed at step ${repository.publishExternalStep} on prior run`);
         }
@@ -303,7 +296,7 @@ await publishRepositories(async (name, repository) => {
         });
 
         await runStep(repository, "commit", () => {
-            run(false, "git", "commit", "--all", "--message", `Updated to version ${packageVersion}.`);
+            run(false, "git", "commit", "--all", "--message", `Updated to version ${packageConfiguration.version}.`);
         });
 
         await runStep(repository, "tag", () => {
@@ -321,14 +314,14 @@ await publishRepositories(async (name, repository) => {
         }
 
         await runStep(repository, "release", async () => {
-            const versionSplit = packageVersion.split("-");
-            const prerelease = versionSplit.length !== 1;
+            const versionSplit = packageConfiguration.version.split("-");
+            const preRelease = versionSplit.length !== 1;
 
             await octokit.rest.repos.createRelease({
                 ...octokitParameterBase,
                 tag_name: tag,
-                name: `${prerelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)}` : "Production"} release ${versionSplit[0]}`,
-                prerelease
+                name: `${preRelease ? `${versionSplit[1].substring(0, 1).toUpperCase()}${versionSplit[1].substring(1)}` : "Production"} release ${versionSplit[0]}`,
+                prerelease: preRelease
             });
         });
 
@@ -344,14 +337,14 @@ await publishRepositories(async (name, repository) => {
             const dependenciesUpdated = updateDependencies(true, false, internal, packageConfiguration.dependencies);
 
             if (devDependenciesUpdated || dependenciesUpdated) {
-                fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+                savePackageConfiguration(packageConfiguration);
 
-                run(false, "git", "commit", packageConfigurationPath, "--message", "Restored alpha versions to organization dependencies.");
+                run(false, "git", "commit", PACKAGE_CONFIGURATION_PATH, "--message", "Restored alpha versions to organization dependencies.");
             }
         });
 
         repository.lastExternalPublished = new Date().toISOString();
-        repository.lastExternalVersion = packageVersion;
+        repository.lastExternalVersion = packageConfiguration.version;
         repository.publishExternalStep = "complete";
     }
 }).then(() => {

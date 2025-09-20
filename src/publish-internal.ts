@@ -1,10 +1,15 @@
 import * as fs from "fs";
 import {
+    buildPackageVersion,
+    loadPackageConfiguration,
+    PACKAGE_CONFIGURATION_PATH, parsePackageVersion,
+    savePackageConfiguration
+} from "./package-configuration";
+import {
     anyChanges,
     atOrganizationRegistry,
     commitConfiguration,
     organizationRepository,
-    type PackageConfiguration,
     publishRepositories
 } from "./publish";
 import { logger, run } from "./utility.js";
@@ -69,11 +74,10 @@ function zeroPadded(n: number, length: number): string {
 
 const dependencyDependenciesMap = new Map<string, string[]>();
 
-await publishRepositories((name, repository) => {
-    const packageConfigurationPath = "package.json";
+const BACKUP_PACKAGE_CONFIGURATION_PATH = ".package.json";
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Package configuration format is known.
-    const packageConfiguration = JSON.parse(fs.readFileSync(packageConfigurationPath).toString()) as PackageConfiguration;
+await publishRepositories((name, repository) => {
+    const packageConfiguration = loadPackageConfiguration();
 
     // Check dependency updates, even if there are no changes.
     const dependencyUpdates = [...checkDependencyUpdates(packageConfiguration.devDependencies), ...checkDependencyUpdates(packageConfiguration.dependencies)];
@@ -114,7 +118,7 @@ await publishRepositories((name, repository) => {
     } else {
         if (dependencyUpdates.length !== 0) {
             // Update the package configuration for the update.
-            fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+            savePackageConfiguration(packageConfiguration);
         }
 
         logger.debug("Updating all dependencies");
@@ -130,25 +134,20 @@ await publishRepositories((name, repository) => {
 
     // Nothing further required if this repository is not a dependency.
     if (repository.dependencyType !== "none" && anyChanges(repository, false)) {
-        const backupPackageConfigurationPath = ".package.json";
-
         // Backup the package configuration file.
-        fs.renameSync(packageConfigurationPath, backupPackageConfigurationPath);
+        fs.renameSync(PACKAGE_CONFIGURATION_PATH, BACKUP_PACKAGE_CONFIGURATION_PATH);
 
         try {
             const now = new Date();
 
-            // Strip pre-release identifier if any.
-            const [semanticVersion] = packageConfiguration.version.split("-");
-
-            // Parse semantic version into its components.
-            const [majorVersion, minorVersion, patchVersion] = semanticVersion.split(".").map(versionString => Number(versionString));
+            const parsedPackageVersion = parsePackageVersion(packageConfiguration.version);
 
             // Set version to alpha version with incremental patch version number.
-            packageConfiguration.version = `${majorVersion}.${minorVersion}.${patchVersion + 1}-alpha.${now.getFullYear()}${zeroPadded(now.getMonth() + 1, 2)}${zeroPadded(now.getDate(), 2)}${zeroPadded(now.getHours(), 2)}${zeroPadded(now.getMinutes(), 2)}`;
+            parsedPackageVersion.preReleaseIdentifier = `alpha.${now.getFullYear()}${zeroPadded(now.getMonth() + 1, 2)}${zeroPadded(now.getDate(), 2)}${zeroPadded(now.getHours(), 2)}${zeroPadded(now.getMinutes(), 2)}`;
+            packageConfiguration.version = buildPackageVersion(parsedPackageVersion);
 
             // Update the package configuration for the build.
-            fs.writeFileSync(packageConfigurationPath, `${JSON.stringify(packageConfiguration, null, 2)}\n`);
+            savePackageConfiguration(packageConfiguration);
 
             // Publish to development npm registry.
             run(false, "npm", "publish", atOrganizationRegistry, "--tag", "alpha");
@@ -164,8 +163,8 @@ await publishRepositories((name, repository) => {
             repository.lastInternalPublished = now.toISOString();
         } finally {
             // Restore the package configuration file.
-            fs.rmSync(packageConfigurationPath);
-            fs.renameSync(backupPackageConfigurationPath, packageConfigurationPath);
+            fs.rmSync(PACKAGE_CONFIGURATION_PATH);
+            fs.renameSync(BACKUP_PACKAGE_CONFIGURATION_PATH, PACKAGE_CONFIGURATION_PATH);
         }
     }
 }).then(() => {

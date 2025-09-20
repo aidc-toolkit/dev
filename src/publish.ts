@@ -74,31 +74,6 @@ export interface Configuration {
     repositories: Record<string, Repository>;
 }
 
-/**
- * Configuration layout of package.json (relevant attributes only).
- */
-export interface PackageConfiguration {
-    /**
-     * Name.
-     */
-    name: string;
-
-    /**
-     * Version.
-     */
-    version: string;
-
-    /**
-     * Development dependencies.
-     */
-    devDependencies?: Record<string, string>;
-
-    /**
-     * Dependencies.
-     */
-    dependencies?: Record<string, string>;
-}
-
 // Merge shared and local repositories.
 export const configuration: Configuration = {
     ...omit(sharedConfigurationJSON, "repositories"),
