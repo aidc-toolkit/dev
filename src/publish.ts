@@ -1,8 +1,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import configurationJSON from "../config/publish.json";
+import sharedConfigurationJSON from "../config/publish.json";
 import localConfigurationJSON from "../config/publish.local.json";
-import { logger, run } from "./utility";
+import { logger, omit, pick, run } from "./utility";
 
 /**
  * Repository.
@@ -99,9 +99,15 @@ export interface PackageConfiguration {
     dependencies?: Record<string, string>;
 }
 
+// Merge shared and local repositories.
 export const configuration: Configuration = {
-    ...configurationJSON,
-    ...localConfigurationJSON
+    ...omit(sharedConfigurationJSON, "repositories"),
+    ...omit(localConfigurationJSON, "repositories"),
+    repositories: Object.fromEntries(Object.entries(sharedConfigurationJSON.repositories).map(([name, repository]) => [name, {
+        ...repository,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Type is known.
+        ...((localConfigurationJSON.repositories as unknown as Record<string, Repository | undefined>)[name] ?? {})
+    }]))
 };
 
 const atOrganization = `@${configuration.organization}`;
@@ -244,16 +250,40 @@ export function anyChanges(repository: Repository, external: boolean): boolean {
     return anyChanges;
 }
 
-const configurationPath = "config/publish.json";
+const sharedConfigurationPath = "config/publish.json";
+const localConfigurationPath = "config/publish.local.json";
 
-// Configuration may be written from any directory so full path is required.
-const configurationFullPath = path.resolve(configurationPath);
+// Configuration may be written from any directory so full paths are required.
+const sharedConfigurationFullPath = path.resolve(sharedConfigurationPath);
+const localConfigurationFullPath = path.resolve(localConfigurationPath);
 
 /**
  * Save the current configuration.
  */
 export function saveConfiguration(): void {
-    fs.writeFileSync(configurationFullPath, `${JSON.stringify(configuration, null, 2)}\n`);
+    const saveSharedRepositories: Record<string, Omit<Repository, "lastInternalPublished">> = {};
+    const saveLocalRepositories: Record<string, Pick<Repository, "lastInternalPublished">> = {};
+
+    for (const [name, repository] of Object.entries(configuration.repositories)) {
+        saveSharedRepositories[name] = omit(repository, "lastInternalPublished");
+
+        if (!(repository.externalOnly ?? false)) {
+            saveLocalRepositories[name] = pick(repository, "lastInternalPublished");
+        }
+    }
+
+    const saveSharedConfiguration = {
+        ...omit(configuration, "registry", "repositories"),
+        repositories: saveSharedRepositories
+    };
+
+    const saveLocalConfiguration = {
+        ...pick(configuration, "registry"),
+        repositories: saveLocalRepositories
+    };
+
+    fs.writeFileSync(sharedConfigurationFullPath, `${JSON.stringify(saveSharedConfiguration, null, 2)}\n`);
+    fs.writeFileSync(localConfigurationFullPath, `${JSON.stringify(saveLocalConfiguration, null, 2)}\n`);
 }
 
 /**
@@ -288,7 +318,7 @@ export async function publishRepositories(callback: (name: string, repository: R
  */
 export function commitConfiguration(external: boolean): void {
     // Check for changes before committing.
-    if (run(true, "git", "status", configurationPath, "--porcelain").length !== 0) {
-        run(false, "git", "commit", configurationPath, "--message", !external ? "Published internally." : "Published externally.");
+    if (run(true, "git", "status", sharedConfigurationPath, "--porcelain").length !== 0) {
+        run(false, "git", "commit", sharedConfigurationPath, "--message", !external ? "Published internally." : "Published externally.");
     }
 }
