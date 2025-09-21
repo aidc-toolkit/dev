@@ -142,7 +142,8 @@ await publishRepositories((name, repository) => {
 
             const parsedPackageVersion = parsePackageVersion(packageConfiguration.version);
 
-            // Set version to alpha version with incremental patch version number.
+            // Set version to incremental patch version number with alpha pre-release identifiers.
+            parsedPackageVersion.patchVersion++;
             parsedPackageVersion.preReleaseIdentifier = `alpha.${now.getFullYear()}${zeroPadded(now.getMonth() + 1, 2)}${zeroPadded(now.getDate(), 2)}${zeroPadded(now.getHours(), 2)}${zeroPadded(now.getMinutes(), 2)}`;
             packageConfiguration.version = buildPackageVersion(parsedPackageVersion);
 
