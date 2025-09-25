@@ -1,6 +1,6 @@
 {
   "name": "@aidc-toolkit/dev",
-  "version": "0.9.18",
+  "version": "0.9.19-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
@@ -25,27 +25,27 @@
     "build:dev": "npm run build:core -- tsconfig-build-dev-local.json",
     "build:release": "npm run build:core -- tsconfig-build-local.json",
     "build:doc": "npm run build:dev",
-    "publish-internal": "tsx src/publish-internal.ts $*",
-    "publish-external": "tsx src/publish-external.ts"
+    "publish-alpha": "tsx src/publish/publish-alpha.ts $*",
+    "publish-beta": "tsx src/publish/publish-beta.ts $*"
   },
   "devDependencies": {
     "copy-files-from-to": "^3.12.1"
   },
   "dependencies": {
-    "@eslint/js": "^9.28.0",
-    "@octokit/types": "^14.1.0",
-    "@stylistic/eslint-plugin": "^4.4.1",
-    "eslint": "^9.28.0",
-    "eslint-config-love": "^120.0.0",
-    "eslint-plugin-jsdoc": "^50.7.1",
-    "jiti": "^2.4.2",
+    "@eslint/js": "^9.36.0",
+    "@octokit/types": "^15.0.0",
+    "@stylistic/eslint-plugin": "^5.4.0",
+    "eslint": "^9.36.0",
+    "eslint-config-love": "^130.0.0",
+    "eslint-plugin-jsdoc": "^60.3.1",
+    "jiti": "^2.6.0",
     "octokit": "^5.0.3",
     "rimraf": "^6.0.1",
     "ts-node": "^10.9.2",
     "tslog": "^4.9.3",
-    "tsx": "^4.19.4",
-    "typescript": "^5.8.3",
-    "typescript-eslint": "^8.33.1",
-    "yaml": "^2.8.0"
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.44.1",
+    "yaml": "^2.8.1"
   }
 }
