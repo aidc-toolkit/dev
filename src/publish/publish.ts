@@ -91,6 +91,8 @@ export interface Configuration {
 
 export const PACKAGE_CONFIGURATION_PATH = "package.json";
 
+export const PACKAGE_LOCK_CONFIGURATION_PATH = "package-lock.json";
+
 /**
  * Configuration layout of package.json (relevant attributes only).
  */
@@ -569,8 +571,8 @@ export abstract class Publish {
                 const status = line.substring(0, 3);
                 const modifiedFile = line.substring(3);
 
-                // Only interest is in local modifications with no conflicts.
-                if (status !== " M ") {
+                // Only interest is in local additions and modifications with no conflicts.
+                if (status !== "A  " && status !== " M " && status !== "AM ") {
                     throw new Error(`Unsupported status "${status}" for ${modifiedFile}`);
                 }
 

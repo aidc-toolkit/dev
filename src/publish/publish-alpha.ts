@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { PACKAGE_CONFIGURATION_PATH, Publish } from "./publish";
+import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish";
 import { logger } from "./logger";
 
 const BACKUP_PACKAGE_CONFIGURATION_PATH = ".package.json";
@@ -131,7 +131,8 @@ class PublishAlpha extends Publish {
                 }
             }
 
-            // TODO Add commit for package.json and package-lock.json.
+            this.commitUpdatedPackageVersion(PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH);
+
             this.repository.lastAlphaPublished = nowISOString;
         }
     }
