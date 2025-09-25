@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 import * as path from "node:path";
 import { setTimeout } from "node:timers/promises";
 import { Octokit } from "octokit";
