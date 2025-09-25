@@ -3,54 +3,45 @@
   "repositories": {
     "dev": {
       "dependencyType": "external",
-      "excludeFiles": [
-        "src/publish.ts",
-        "src/publish-internal.ts",
-        "src/publish-external.ts",
-        "config/publish.json",
-        "config/publish.secure.json"
+      "excludePaths": [
+        "src/publish/",
+        "config/publish.json"
       ],
-      "lastExternalPublished": "2025-06-09T02:29:43.810Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T02:29:43.810Z"
     },
     "core": {
       "dependencyType": "external",
-      "lastExternalPublished": "2025-06-09T02:31:46.793Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T02:31:46.793Z"
     },
     "utility": {
       "dependencyType": "external",
-      "lastExternalPublished": "2025-06-09T12:43:30.472Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T12:43:30.472Z"
     },
     "gs1": {
       "dependencyType": "external",
-      "lastExternalPublished": "2025-06-09T12:44:44.764Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T12:44:44.764Z"
     },
     "demo": {
       "dependencyType": "none",
-      "externalOnly": true,
-      "lastExternalPublished": "2025-06-09T13:03:31.157Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T13:03:31.157Z"
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastExternalPublished": "2025-06-09T13:03:49.309Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T13:03:49.309Z"
     },
     "app-generator": {
       "dependencyType": "internal",
-      "lastExternalPublished": "2025-06-09T13:03:53.348Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T13:03:53.348Z"
     },
     "aidc-toolkit.github.io": {
       "directory": "doc",
+      "additionalDependencies": [
+        "core",
+        "utility",
+        "gs1"
+      ],
       "dependencyType": "none",
-      "publishExternalAlways": true,
-      "externalOnly": true,
-      "lastExternalPublished": "2025-06-09T13:15:55.394Z",
-      "lastExternalVersion": "0.9.18-beta"
+      "lastBetaPublished": "2025-06-09T13:15:55.394Z"
     }
   }
 }
