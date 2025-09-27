@@ -221,7 +221,7 @@ class PublishBeta extends Publish {
             }
 
             await this.runStep("install", () => {
-                this.run(false, false, "npm", "install");
+                this.run(false, false, "npm", "install", ...this.npmPlatformArgs);
             });
 
             await this.runStep("build", () => {

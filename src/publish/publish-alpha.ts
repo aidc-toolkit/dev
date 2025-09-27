@@ -67,7 +67,7 @@ class PublishAlpha extends Publish {
             logger.debug("Updating all dependencies");
 
             // Running this even if there are no dependency updates will update dependencies of dependencies.
-            this.run(false, false, "npm", "update");
+            this.run(false, false, "npm", "update", ...this.npmPlatformArgs);
         }
 
         const anyChanges = this.anyChanges(this.repository.lastAlphaPublished);
@@ -88,7 +88,7 @@ class PublishAlpha extends Publish {
 
                 logger.debug(`Updating organization dependencies [${updateOrganizationDependencies.join(", ")}]`);
 
-                this.run(false, false, "npm", "update", ...updateOrganizationDependencies);
+                this.run(false, false, "npm", "update", ...updateOrganizationDependencies, ...this.npmPlatformArgs);
             }
         }
 
@@ -110,7 +110,7 @@ class PublishAlpha extends Publish {
 
                 try {
                     // Package version is transient.
-                    this.updatePackageVersion(undefined, undefined, undefined, `alpha.${nowISOString.replaceAll(/[^\d]/g, "").substring(0, 12)}`);
+                    this.updatePackageVersion(undefined, undefined, undefined, `alpha.${nowISOString.replaceAll(/\D/g, "").substring(0, 12)}`);
 
                     // Publish to development NPM registry.
                     this.run(false, false, "npm", "publish", "--tag", "alpha");

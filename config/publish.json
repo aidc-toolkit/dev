@@ -33,6 +33,9 @@
       "dependencyType": "internal",
       "lastBetaPublished": "2025-06-09T13:03:53.348Z"
     },
+    "microsoft-add-in": {
+      "dependencyType": "none"
+    },
     "aidc-toolkit.github.io": {
       "directory": "doc",
       "additionalDependencies": [

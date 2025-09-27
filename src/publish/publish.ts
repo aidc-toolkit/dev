@@ -24,14 +24,29 @@ export interface Repository {
     directory?: string;
 
     /**
-     * Additional dependencies not included in package configuration.
-     */
-    additionalDependencies?: string[];
-
-    /**
      * Dependency type, dictating how it is published.
      */
     dependencyType: string;
+
+    /**
+     * Platform if building across platforms (local configuration), e.g., macOS hosting Windows on Parallels.
+     */
+    platform?: {
+        /**
+         * CPU architecture of native modules to install.
+         */
+        cpu: string;
+
+        /**
+         * OS of native modules to install.
+         */
+        os: string;
+    };
+
+    /**
+     * Additional dependencies not included in package configuration.
+     */
+    additionalDependencies?: string[];
 
     /**
      * Paths to exclude from consideration when checking for changes.
@@ -42,6 +57,11 @@ export interface Repository {
      * Date/time in ISO format the last alpha version was published.
      */
     lastAlphaPublished?: string;
+
+    /**
+     * Current step in beta publication; used to resume after failure recovery.
+     */
+    publishBetaStep?: string | undefined;
 
     /**
      * Date/time in ISO format the last beta version was published.
@@ -57,11 +77,6 @@ export interface Repository {
      * Last production version.
      */
     lastProductionVersion?: string;
-
-    /**
-     * Current step in beta publication; used to resume after failure recovery.
-     */
-    publishBetaStep?: string | undefined;
 }
 
 /**
@@ -69,19 +84,19 @@ export interface Repository {
  */
 export interface Configuration {
     /**
-     * Log level.
-     */
-    logLevel?: string;
-
-    /**
      * Organization that owns the repositories.
      */
     organization: string;
 
     /**
-     * Registry hosting organization's repositories.
+     * Log level (local configuration).
      */
-    registry: string;
+    logLevel?: string;
+
+    /**
+     * Registry hosting organization's alpha repositories (local configuration).
+     */
+    alphaRegistry: string;
 
     /**
      * Repositories.
@@ -168,6 +183,11 @@ export abstract class Publish {
     private _repository!: Repository;
 
     /**
+     * NPM platform arguments if any.
+     */
+    private _npmPlatformArgs!: string[];
+
+    /**
      * Branch.
      */
     private _branch!: string;
@@ -198,7 +218,8 @@ export abstract class Publish {
     private _preReleaseIdentifier!: string | null;
 
     /**
-     * Dependencies that belong to the organization, keyed on repository name; null if additional (not included in package configuration).
+     * Dependencies that belong to the organization, keyed on repository name; null if additional (not included in
+     * package configuration).
      */
     private _organizationDependencies!: Record<string, string | null>;
 
@@ -232,7 +253,7 @@ export abstract class Publish {
 
         this._atOrganization = `@${this.configuration.organization}`;
 
-        this._atOrganizationRegistry = `${this.atOrganization}:registry=${this.configuration.registry}`;
+        this._atOrganizationRegistry = `${this.atOrganization}:registry=${this.configuration.alphaRegistry}`;
 
         this._allOrganizationDependencies = {};
 
@@ -295,6 +316,13 @@ export abstract class Publish {
      */
     protected get repository(): Repository {
         return this._repository;
+    }
+
+    /**
+     * Get the NPM platform arguments if any.
+     */
+    get npmPlatformArgs(): string[] {
+        return this._npmPlatformArgs;
     }
 
     /**
@@ -647,21 +675,21 @@ export abstract class Publish {
      * Save the current configuration.
      */
     protected saveConfiguration(): void {
-        const saveSharedRepositories: Record<string, Omit<Repository, "lastAlphaPublished">> = {};
-        const saveLocalRepositories: Record<string, Pick<Repository, "lastAlphaPublished">> = {};
+        const saveSharedRepositories: Record<string, Omit<Repository, "platform" | "lastAlphaPublished">> = {};
+        const saveLocalRepositories: Record<string, Pick<Repository, "platform" | "lastAlphaPublished">> = {};
 
         for (const [repositoryName, repository] of Object.entries(this.configuration.repositories)) {
-            saveSharedRepositories[repositoryName] = omit(repository, "lastAlphaPublished");
-            saveLocalRepositories[repositoryName] = pick(repository, "lastAlphaPublished");
+            saveSharedRepositories[repositoryName] = omit(repository, "platform", "lastAlphaPublished");
+            saveLocalRepositories[repositoryName] = pick(repository, "platform", "lastAlphaPublished");
         }
 
         const saveSharedConfigurationJSON = JSON.stringify({
-            ...omit(this.configuration, "logLevel", "registry", "repositories"),
+            ...omit(this.configuration, "logLevel", "alphaRegistry", "repositories"),
             repositories: saveSharedRepositories
         }, null, 2);
 
         const saveLocalConfigurationJSON = JSON.stringify({
-            ...pick(this.configuration, "logLevel", "registry"),
+            ...pick(this.configuration, "logLevel", "alphaRegistry"),
             repositories: saveLocalRepositories
         }, null, 2);
 
@@ -688,6 +716,15 @@ export abstract class Publish {
         for (const [repositoryName, repository] of Object.entries(this.configuration.repositories)) {
             this._repositoryName = repositoryName;
             this._repository = repository;
+
+            this._npmPlatformArgs = repository.platform !== undefined ?
+                [
+                    "--cpu",
+                    repository.platform.cpu,
+                    "--os",
+                    repository.platform.os
+                ] :
+                [];
 
             this._branch = this.run(true, true, "git", "branch", "--show-current")[0];
 
@@ -836,8 +873,8 @@ export abstract class Publish {
                 } finally {
                     this.saveConfiguration();
                 }
-            // Internal repositories may be private and not accessible to all developers.
-            } else if (repository.dependencyType !== "internal") {
+            // Non-external repositories may be private and not accessible to all developers.
+            } else if (repository.dependencyType === "external") {
                 throw new Error(`Repository ${repositoryName} not found`);
             }
         }
