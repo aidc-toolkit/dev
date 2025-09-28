@@ -4,8 +4,8 @@ import { setTimeout } from "node:timers/promises";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 import secureConfigurationJSON from "../../config/publish.secure.json";
-import { Publish } from "./publish";
-import { logger } from "./logger";
+import { Publish } from "./publish.js";
+import { logger } from "./logger.js";
 
 /**
  * Configuration layout of publish.secure.json.

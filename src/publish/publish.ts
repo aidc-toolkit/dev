@@ -4,8 +4,8 @@ import * as path from "node:path";
 import * as process from "node:process";
 import sharedConfigurationJSON from "../../config/publish.json";
 import localConfigurationJSON from "../../config/publish.local.json";
-import { logger, setLogLevel } from "./logger";
-import { omit, pick } from "./type-helper";
+import { logger, setLogLevel } from "./logger.js";
+import { omit, pick } from "./type-helper.js";
 
 const SHARED_CONFIGURATION_PATH = "config/publish.json";
 const LOCAL_CONFIGURATION_PATH = "config/publish.local.json";

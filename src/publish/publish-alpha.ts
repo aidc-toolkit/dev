@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
-import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish";
-import { logger } from "./logger";
+import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish.js";
+import { logger } from "./logger.js";
 
 const BACKUP_PACKAGE_CONFIGURATION_PATH = ".package.json";
 
