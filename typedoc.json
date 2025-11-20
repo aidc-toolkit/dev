@@ -1,5 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
+  "exclude": ["src/locale/**/locale-strings.ts"],
   "sourceLinkExternal": true,
   "groupOrder": [
     "Enumerations",
