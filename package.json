@@ -29,23 +29,23 @@
     "publish-beta": "tsx src/publish/publish-beta.ts $*"
   },
   "devDependencies": {
-    "copy-files-from-to": "^3.12.1"
+    "copy-files-from-to": "^3.13.0"
   },
   "dependencies": {
-    "@eslint/js": "^9.36.0",
-    "@octokit/types": "^15.0.0",
-    "@stylistic/eslint-plugin": "^5.4.0",
-    "eslint": "^9.36.0",
-    "eslint-config-love": "^130.0.0",
-    "eslint-plugin-jsdoc": "^60.4.0",
-    "jiti": "^2.6.0",
-    "octokit": "^5.0.3",
-    "rimraf": "^6.0.1",
+    "@eslint/js": "^9.39.1",
+    "@octokit/types": "^16.0.0",
+    "@stylistic/eslint-plugin": "^5.6.1",
+    "eslint": "^9.39.1",
+    "eslint-config-love": "^134.0.0",
+    "eslint-plugin-jsdoc": "^61.3.0",
+    "jiti": "^2.6.1",
+    "octokit": "^5.0.5",
+    "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
-    "tslog": "^4.9.3",
+    "tslog": "^4.10.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.2",
-    "typescript-eslint": "^8.44.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.47.0",
     "yaml": "^2.8.1"
   }
 }
