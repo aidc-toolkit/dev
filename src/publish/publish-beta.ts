@@ -121,13 +121,14 @@ class PublishBeta extends Publish {
         let workflowRunID = -1;
 
         do {
-            await setTimeout(2000);
-
-            const response = await this._octokit.rest.actions.listWorkflowRunsForRepo({
-                owner: this.configuration.organization,
-                repo: this.repositoryName,
-                head_sha: commitSHA
-            });
+            // eslint-disable-next-line no-await-in-loop -- Loop depends on awaited response.
+            const response = await setTimeout(2000).then(
+                async () => this._octokit.rest.actions.listWorkflowRunsForRepo({
+                    owner: this.configuration.organization,
+                    repo: this.repositoryName,
+                    head_sha: commitSHA
+                })
+            );
 
             for (const workflowRun of response.data.workflow_runs) {
                 if (workflowRun.status !== "completed") {

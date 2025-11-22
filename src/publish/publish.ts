@@ -404,7 +404,7 @@ export abstract class Publish {
             throw new Error("Cannot capture output in dry run");
         }
 
-        let output: string[] = [];
+        let output: string[];
 
         const runningCommand = `Running command "${command}" with arguments [${args.join(", ")}].`;
 
@@ -496,8 +496,8 @@ export abstract class Publish {
             }
 
             if (addFile !== undefined && !changedFilesSet.has(addFile)) {
-                // Exclude hidden files and directories except .github directory, as well as test directory and any explicitly excluded files or directories.
-                if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && !addFile.startsWith("test/") && excludePaths.filter(excludePath => addFile === excludePath || (excludePath.endsWith("/") && addFile.startsWith(excludePath))).length === 0) {
+                // Exclude hidden files and directories except .github directory, package-lock.json, test directory, and any explicitly excluded files or directories.
+                if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && addFile !== PACKAGE_LOCK_CONFIGURATION_PATH && !addFile.startsWith("test/") && excludePaths.filter(excludePath => addFile === excludePath || (excludePath.endsWith("/") && addFile.startsWith(excludePath))).length === 0) {
                     logger.debug(`+${addFile}`);
 
                     changedFilesSet.add(addFile);
@@ -869,6 +869,7 @@ export abstract class Publish {
                 }
 
                 try {
+                    // eslint-disable-next-line no-await-in-loop -- Next iteration requires previous to finish.
                     await this.publish();
                 } finally {
                     this.saveConfiguration();
