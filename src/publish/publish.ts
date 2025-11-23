@@ -463,10 +463,13 @@ export abstract class Publish {
      * @param lastPublished
      * Date/time in ISO format to check against.
      *
+     * @param ignoreGitHub
+     * If true, ignore .github directory.
+     *
      * @returns
      * True if there is no last published date/time or if there have been any changes since then.
      */
-    protected anyChanges(lastPublished: string | undefined): boolean {
+    protected anyChanges(lastPublished: string | undefined, ignoreGitHub: boolean): boolean {
         let anyChanges: boolean;
 
         const excludePaths = this.repository.excludePaths ?? [];
@@ -496,8 +499,8 @@ export abstract class Publish {
             }
 
             if (addFile !== undefined && !changedFilesSet.has(addFile)) {
-                // Exclude hidden files and directories except .github directory, package-lock.json, test directory, and any explicitly excluded files or directories.
-                if (((!addFile.startsWith(".") && !addFile.includes("/.")) || addFile.startsWith(".github/")) && addFile !== PACKAGE_LOCK_CONFIGURATION_PATH && !addFile.startsWith("test/") && excludePaths.filter(excludePath => addFile === excludePath || (excludePath.endsWith("/") && addFile.startsWith(excludePath))).length === 0) {
+                // Exclude hidden files and directories except possibly .github directory, package-lock.json, test directory, and any explicitly excluded files or directories.
+                if (((!addFile.startsWith(".") && !addFile.includes("/.")) || (!ignoreGitHub && addFile.startsWith(".github/"))) && addFile !== PACKAGE_LOCK_CONFIGURATION_PATH && !addFile.startsWith("test/") && excludePaths.filter(excludePath => addFile === excludePath || (excludePath.endsWith("/") && addFile.startsWith(excludePath))).length === 0) {
                     logger.debug(`+${addFile}`);
 
                     changedFilesSet.add(addFile);

@@ -70,7 +70,7 @@ class PublishAlpha extends Publish {
             this.run(false, false, "npm", "update", ...this.npmPlatformArgs);
         }
 
-        const anyChanges = this.anyChanges(this.repository.lastAlphaPublished);
+        const anyChanges = this.anyChanges(this.repository.lastAlphaPublished, true);
 
         if (anyChanges) {
             const switchToAlpha = this.preReleaseIdentifier !== "alpha";

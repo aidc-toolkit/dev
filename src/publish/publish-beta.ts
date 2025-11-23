@@ -171,7 +171,7 @@ class PublishBeta extends Publish {
         }
 
         if (this.preReleaseIdentifier === "alpha") {
-            if (this.anyChanges(this.repository.lastAlphaPublished)) {
+            if (this.anyChanges(this.repository.lastAlphaPublished, true)) {
                 throw new Error("Repository has changed since last alpha published");
             }
 
@@ -183,7 +183,7 @@ class PublishBeta extends Publish {
             publish = this.repository.publishBetaStep !== undefined;
 
             // Ignore changes after publication process has started.
-            if (!publish && this.anyChanges(this.repository.lastBetaPublished)) {
+            if (!publish && this.anyChanges(this.repository.lastBetaPublished, false)) {
                 throw new Error("Internal error, repository has changed without intermediate alpha publication");
             }
         }
