@@ -11,6 +11,10 @@
     {
       "from": ".github/workflows/release.yml",
       "to": "../gs1/.github/workflows/"
+    },
+    {
+      "from": ".github/workflows/release.yml",
+      "to": "../app-extension/.github/workflows/"
     }
   ],
 

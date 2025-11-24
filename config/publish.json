@@ -31,7 +31,7 @@
       "lastBetaTag": "v0.9.19-beta"
     },
     "app-extension": {
-      "dependencyType": "internal",
+      "dependencyType": "external",
       "lastBetaPublished": "2025-11-24T04:32:30.078Z",
       "lastBetaTag": "v0.9.19-beta"
     },
