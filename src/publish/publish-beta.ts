@@ -114,49 +114,53 @@ class PublishBeta extends Publish {
      * Branch on which workflow is running.
      */
     private async validateWorkflow(): Promise<void> {
-        const commitSHA = this.run(true, true, "git", "rev-parse", this.branch)[0];
+        if (this.dryRun) {
+            logger.info("Dry run: Validate workflow");
+        } else {
+            const commitSHA = this.run(true, true, "git", "rev-parse", this.branch)[0];
 
-        let completed = false;
-        let queryCount = 0;
-        let workflowRunID = -1;
+            let completed = false;
+            let queryCount = 0;
+            let workflowRunID = -1;
 
-        do {
-            // eslint-disable-next-line no-await-in-loop -- Loop depends on awaited response.
-            const response = await setTimeout(2000).then(
-                async () => this._octokit.rest.actions.listWorkflowRunsForRepo({
-                    owner: this.configuration.organization,
-                    repo: this.repositoryName,
-                    head_sha: commitSHA
-                })
-            );
+            do {
+                // eslint-disable-next-line no-await-in-loop -- Loop depends on awaited response.
+                const response = await setTimeout(2000).then(
+                    async () => this._octokit.rest.actions.listWorkflowRunsForRepo({
+                        owner: this.configuration.organization,
+                        repo: this.repositoryName,
+                        head_sha: commitSHA
+                    })
+                );
 
-            for (const workflowRun of response.data.workflow_runs) {
-                if (workflowRun.status !== "completed") {
-                    if (workflowRun.id === workflowRunID) {
-                        process.stdout.write(".");
-                    } else if (workflowRunID === -1) {
-                        workflowRunID = workflowRun.id;
+                for (const workflowRun of response.data.workflow_runs) {
+                    if (workflowRun.status !== "completed") {
+                        if (workflowRun.id === workflowRunID) {
+                            process.stdout.write(".");
+                        } else if (workflowRunID === -1) {
+                            workflowRunID = workflowRun.id;
 
-                        logger.info(`Workflow run ID ${workflowRunID}`);
-                    } else {
-                        throw new Error(`Parallel workflow runs for SHA ${commitSHA}`);
+                            logger.info(`Workflow run ID ${workflowRunID}`);
+                        } else {
+                            throw new Error(`Parallel workflow runs for SHA ${commitSHA}`);
+                        }
+                    } else if (workflowRun.id === workflowRunID) {
+                        process.stdout.write("\n");
+
+                        if (workflowRun.conclusion !== "success") {
+                            throw new Error(`Workflow ${workflowRun.conclusion}`);
+                        }
+
+                        completed = true;
                     }
-                } else if (workflowRun.id === workflowRunID) {
-                    process.stdout.write("\n");
-
-                    if (workflowRun.conclusion !== "success") {
-                        throw new Error(`Workflow ${workflowRun.conclusion}`);
-                    }
-
-                    completed = true;
                 }
-            }
 
-            // Abort if workflow run not started after 10 queries.
-            if (++queryCount === 10 && workflowRunID === -1) {
-                throw new Error(`Workflow run not started for SHA ${commitSHA}`);
-            }
-        } while (!completed);
+                // Abort if workflow run not started after 10 queries.
+                if (++queryCount === 10 && workflowRunID === -1) {
+                    throw new Error(`Workflow run not started for SHA ${commitSHA}`);
+                }
+            } while (!completed);
+        }
     }
 
     /**
@@ -248,13 +252,17 @@ class PublishBeta extends Publish {
             }
 
             await this.runStep("release", async () => {
-                await this._octokit.rest.repos.createRelease({
-                    owner: this.configuration.organization,
-                    repo: this.repositoryName,
-                    tag_name: tag,
-                    name: `Release ${tag}`,
-                    prerelease: true
-                });
+                if (this.dryRun) {
+                    logger.info("Dry run: Create release");
+                } else {
+                    await this._octokit.rest.repos.createRelease({
+                        owner: this.configuration.organization,
+                        repo: this.repositoryName,
+                        tag_name: tag,
+                        name: `Release ${tag}`,
+                        prerelease: true
+                    });
+                }
             });
 
             if (hasReleaseWorkflow) {
