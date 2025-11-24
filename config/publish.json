@@ -7,34 +7,43 @@
         "src/publish/",
         "config/publish.json"
       ],
-      "lastBetaPublished": "2025-06-09T02:29:43.810Z"
+      "lastBetaPublished": "2025-11-24T01:51:22.533Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "core": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-06-09T02:31:46.793Z"
+      "lastBetaPublished": "2025-11-24T02:47:43.671Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "utility": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-06-09T12:43:30.472Z"
+      "lastBetaPublished": "2025-11-24T04:12:17.212Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "gs1": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-06-09T12:44:44.764Z"
+      "lastBetaPublished": "2025-11-24T04:32:15.180Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "demo": {
       "dependencyType": "none",
-      "lastBetaPublished": "2025-06-09T13:03:31.157Z"
+      "lastBetaPublished": "2025-11-24T04:32:22.770Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "app-extension": {
       "dependencyType": "internal",
-      "lastBetaPublished": "2025-06-09T13:03:49.309Z"
+      "lastBetaPublished": "2025-11-24T04:32:30.078Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "app-generator": {
       "dependencyType": "internal",
-      "lastBetaPublished": "2025-06-09T13:03:53.348Z"
+      "lastBetaPublished": "2025-11-24T15:15:35.270Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "microsoft-add-in": {
-      "dependencyType": "none"
+      "dependencyType": "none",
+      "lastBetaPublished": "2025-11-24T15:27:57.639Z",
+      "lastBetaTag": "v0.9.19-beta"
     },
     "aidc-toolkit.github.io": {
       "directory": "doc",
@@ -44,7 +53,8 @@
         "gs1"
       ],
       "dependencyType": "none",
-      "lastBetaPublished": "2025-06-09T13:15:55.394Z"
+      "lastBetaPublished": "2025-11-24T19:35:57.785Z",
+      "lastBetaTag": "v0.9.19-beta"
     }
   }
 }
