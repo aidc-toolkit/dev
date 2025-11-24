@@ -1,6 +1,6 @@
 {
   "name": "@aidc-toolkit/dev",
-  "version": "0.9.19-beta",
+  "version": "0.9.20-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
