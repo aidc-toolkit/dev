@@ -10,7 +10,9 @@ permissions:
 
 jobs:
   release:
-    environment: npm
+    environment:
+      name: npm
+
     runs-on: ubuntu-latest
 
     steps:
