@@ -70,7 +70,7 @@ class PublishAlpha extends Publish {
             this.run(false, false, "npm", "update", ...this.npmPlatformArgs);
         }
 
-        const anyChanges = this.anyChanges(this.repository.lastAlphaPublished, true);
+        const anyChanges = this.anyChanges(this.repository.lastAlphaPublished, true) || this.organizationDependenciesUpdated;
 
         if (anyChanges) {
             const switchToAlpha = this.preReleaseIdentifier !== "alpha";
@@ -80,15 +80,11 @@ class PublishAlpha extends Publish {
                 this.updatePackageVersion(undefined, undefined, this.patchVersion + 1, "alpha");
 
                 // Use specified registry for organization until no longer in alpha mode.
-                this.run(false, false, "npm", "set", this.atOrganizationRegistry, "--location", "project");
+                this.run(false, false, "npm", "config", "set", this.atOrganizationRegistry, "--location", "project");
             }
 
             if (this.organizationDependenciesUpdated && (switchToAlpha || !this._updateAll)) {
-                const updateOrganizationDependencies = Object.values(this.organizationDependencies).filter(updateOrganizationDependency => updateOrganizationDependency !== null);
-
-                logger.debug(`Updating organization dependencies [${updateOrganizationDependencies.join(", ")}]`);
-
-                this.run(false, false, "npm", "update", ...updateOrganizationDependencies, ...this.npmPlatformArgs);
+                this.updateOrganizationDependencies();
             }
         }
 

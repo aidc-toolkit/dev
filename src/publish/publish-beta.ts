@@ -35,7 +35,7 @@ interface WorkflowConfiguration {
              * Push branches.
              */
             branches?: string[];
-        };
+        } | null;
 
         /**
          * Release trigger.
@@ -45,14 +45,14 @@ interface WorkflowConfiguration {
              * Release types.
              */
             types?: string[];
-        };
+        } | null;
     };
 }
 
 /**
  * Publish steps.
  */
-type Step = "install" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)";
+type Step = "update" | "build" | "commit" | "tag" | "push" | "workflow (push)" | "release" | "workflow (release)" | "complete";
 
 /**
  * Publish beta versions.
@@ -182,12 +182,17 @@ class PublishBeta extends Publish {
             publish = true;
 
             this.updatePackageVersion(undefined, undefined, undefined, "beta");
+
+            // Revert to default registry for organization.
+            this.run(false, false, "npm", "config", "delete", this.atOrganizationRegistry, "--location", "project");
         } else {
-            // Publish beta step is defined if previous attempt failed at that step.
-            publish = this.repository.publishBetaStep !== undefined;
+            const startingPublication = this.repository.publishBetaStep === undefined;
+
+            // Publish beta step is defined and not "complete" if previous attempt failed at that step.
+            publish = !startingPublication && this.repository.publishBetaStep !== "complete";
 
             // Ignore changes after publication process has started.
-            if (!publish && this.anyChanges(this.repository.lastBetaPublished, false)) {
+            if (startingPublication && this.anyChanges(this.repository.lastAlphaPublished, false)) {
                 throw new Error("Internal error, repository has changed without intermediate alpha publication");
             }
         }
@@ -211,13 +216,13 @@ class PublishBeta extends Publish {
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Workflow configuration format is known.
                     const workflowOn = (yamlParse(fs.readFileSync(path.resolve(workflowsPath, workflowFile)).toString()) as WorkflowConfiguration).on;
 
-                    if (workflowOn.push !== undefined && (workflowOn.push.branches === undefined || workflowOn.push.branches.includes("v*"))) {
+                    if (workflowOn.push !== undefined && (workflowOn.push?.branches === undefined || workflowOn.push.branches.includes("v*"))) {
                         logger.debug("Repository has push workflow");
 
                         hasPushWorkflow = true;
                     }
 
-                    if (workflowOn.release !== undefined && (workflowOn.release.types === undefined || workflowOn.release.types.includes("published"))) {
+                    if (workflowOn.release !== undefined && (workflowOn.release?.types === undefined || workflowOn.release.types.includes("published"))) {
                         logger.debug("Repository has release workflow");
 
                         hasReleaseWorkflow = true;
@@ -225,8 +230,8 @@ class PublishBeta extends Publish {
                 }
             }
 
-            await this.runStep("install", () => {
-                this.run(false, false, "npm", "install", ...this.npmPlatformArgs);
+            await this.runStep("update", () => {
+                this.updateOrganizationDependencies();
             });
 
             await this.runStep("build", () => {
@@ -272,7 +277,8 @@ class PublishBeta extends Publish {
             }
 
             this.repository.lastBetaPublished = new Date().toISOString();
-            this.repository.publishBetaStep = undefined;
+            this.repository.lastBetaTag = tag;
+            this.repository.publishBetaStep = "complete";
         }
     }
 

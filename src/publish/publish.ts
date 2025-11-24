@@ -59,14 +59,19 @@ export interface Repository {
     lastAlphaPublished?: string;
 
     /**
-     * Current step in beta publication; used to resume after failure recovery.
-     */
-    publishBetaStep?: string | undefined;
-
-    /**
      * Date/time in ISO format the last beta version was published.
      */
     lastBetaPublished?: string;
+
+    /**
+     * Last beta tag.
+     */
+    lastBetaTag?: string;
+
+    /**
+     * Current step in beta publication; used to resume after failure recovery.
+     */
+    publishBetaStep?: string | undefined;
 
     /**
      * Date/time in ISO format the last production version was published.
@@ -170,7 +175,7 @@ export abstract class Publish {
     /**
      * All organization dependencies, keyed on repository name.
      */
-    private readonly _allOrganizationDependencies: Record<string, Record<string, string | null>>;
+    private readonly _allOrganizationDependencies: Record<string, Record<string, string>>;
 
     /**
      * Current repository name.
@@ -218,10 +223,9 @@ export abstract class Publish {
     private _preReleaseIdentifier!: string | null;
 
     /**
-     * Dependencies that belong to the organization, keyed on repository name; null if additional (not included in
-     * package configuration).
+     * Dependencies that belong to the organization, keyed on repository name.
      */
-    private _organizationDependencies!: Record<string, string | null>;
+    private _organizationDependencies!: Record<string, string>;
 
     /**
      * True if any organization dependency has been updated.
@@ -253,7 +257,7 @@ export abstract class Publish {
 
         this._atOrganization = `@${this.configuration.organization}`;
 
-        this._atOrganizationRegistry = `${this.atOrganization}:registry=${this.configuration.alphaRegistry}`;
+        this._atOrganizationRegistry = `${this.atOrganization}:registry${releaseType === "alpha" ? `=${this.configuration.alphaRegistry}` : ""}`;
 
         this._allOrganizationDependencies = {};
 
@@ -300,7 +304,7 @@ export abstract class Publish {
     /**
      * Get all organization dependencies, keyed on repository name.
      */
-    protected get allOrganizationDependencies(): Record<string, Record<string, string | null>> {
+    protected get allOrganizationDependencies(): Record<string, Record<string, string>> {
         return this._allOrganizationDependencies;
     }
 
@@ -370,7 +374,7 @@ export abstract class Publish {
     /**
      * Get dependencies that belong to the organization, keyed on repository name.
      */
-    protected get organizationDependencies(): Record<string, string | null> {
+    protected get organizationDependencies(): Record<string, string> {
         return this._organizationDependencies;
     }
 
@@ -532,10 +536,7 @@ export abstract class Publish {
             const output = this.run(true, true, "git", "status", "--porcelain");
 
             if (output.length !== 0) {
-                // Beta or production publication requires that repository be fully committed.
-                if (this.releaseType !== "alpha") {
-                    throw new Error("Repository has uncommitted changes");
-                }
+                const committedCount = changedFilesSet.size;
 
                 logger.debug("Uncommitted");
 
@@ -545,6 +546,11 @@ export abstract class Publish {
                     const [file, newFile] = line.substring(3).split(" -> ");
 
                     processChangedFile(status, file, newFile);
+                }
+
+                // Beta or production publication requires that repository be fully committed except for excluded paths.
+                if (this.releaseType !== "alpha" && changedFilesSet.size !== committedCount) {
+                    throw new Error("Repository has uncommitted changes");
                 }
             }
 
@@ -562,12 +568,6 @@ export abstract class Publish {
 
                     logger.info(`>${changedFile}`);
                 }
-            }
-
-            if (!anyChanges && this.organizationDependenciesUpdated) {
-                logger.info("Organization dependencies updated");
-
-                anyChanges = true;
             }
 
             if (!anyChanges) {
@@ -662,6 +662,17 @@ export abstract class Publish {
         this.packageConfiguration.version = `${this.majorVersion}.${this.minorVersion}.${this.patchVersion}${this.preReleaseIdentifier !== null ? `-${this.preReleaseIdentifier}` : ""}`;
 
         this.savePackageConfiguration();
+    }
+
+    /**
+     * Update organization dependencies.
+     */
+    protected updateOrganizationDependencies(): void {
+        const organizationDependencies = Object.values(this.organizationDependencies);
+
+        logger.debug(`Updating organization dependencies [${organizationDependencies.join(", ")}]`);
+
+        this.run(false, false, "npm", "update", ...organizationDependencies, ...this.npmPlatformArgs);
     }
 
     /**
@@ -777,19 +788,48 @@ export abstract class Publish {
 
                                 this.organizationDependencies[dependencyRepositoryName] = dependency;
 
-                                if (this.releaseType !== "production") {
-                                    // This change will ultimately be discarded if there are no changes and no updates to organization dependencies.
-                                    currentDependencies[dependency] = this.releaseType;
-                                } else {
-                                    const dependencyRepository = this.configuration.repositories[dependencyRepositoryName];
+                                const dependencyRepository = this.configuration.repositories[dependencyRepositoryName];
 
-                                    const lastProductionVersion = dependencyRepository.lastProductionVersion;
+                                // Dependency changes will ultimately be discarded if there are no changes and no updates to organization dependencies.
+                                switch (this.releaseType) {
+                                    case "alpha":
+                                        currentDependencies[dependency] = "alpha";
+                                        break;
 
-                                    if (lastProductionVersion === undefined) {
-                                        throw new Error(`Internal error, last production version not set for ${dependencyRepositoryName}`);
-                                    }
+                                    case "beta":
+                                        switch (dependencyRepository.dependencyType) {
+                                            case "external":
+                                                currentDependencies[dependency] = "beta";
+                                                break;
 
-                                    currentDependencies[dependency] = `^${lastProductionVersion}`;
+                                            case "internal":
+                                                {
+                                                    const lastBetaTag = dependencyRepository.lastBetaTag;
+
+                                                    if (lastBetaTag === undefined) {
+                                                        throw new Error(`Internal error, last beta tag not set for ${dependencyRepositoryName}`);
+                                                    }
+
+                                                    currentDependencies[dependency] = `${this.configuration.organization}/${dependencyRepositoryName}#${lastBetaTag}`;
+                                                }
+                                                break;
+
+                                            default:
+                                                throw new Error(`Invalid dependency type "${dependencyRepository.dependencyType}" for dependency ${dependencyRepositoryName}`);
+                                        }
+                                        break;
+
+                                    case "production":
+                                        {
+                                            const lastProductionVersion = dependencyRepository.lastProductionVersion;
+
+                                            if (lastProductionVersion === undefined) {
+                                                throw new Error(`Internal error, last production version not set for ${dependencyRepositoryName}`);
+                                            }
+
+                                            currentDependencies[dependency] = `^${lastProductionVersion}`;
+                                        }
+                                        break;
                                 }
                             }
                         }
@@ -797,13 +837,15 @@ export abstract class Publish {
                 }
 
                 if (repository.additionalDependencies !== undefined) {
-                    for (const additionalDependency of repository.additionalDependencies) {
-                        if (additionalDependency in this.organizationDependencies) {
-                            logger.warn(`Additional dependency ${additionalDependency} already exists`);
+                    for (const additionalDependencyName of repository.additionalDependencies) {
+                        if (additionalDependencyName in this.organizationDependencies) {
+                            logger.warn(`Additional dependency ${additionalDependencyName} already exists`);
                         } else {
-                            logger.trace(`Organization dependency from additional dependencies ${additionalDependency}:null`);
+                            const dependency = `${this.atOrganization}/${additionalDependencyName}`;
 
-                            this.organizationDependencies[additionalDependency] = null;
+                            logger.trace(`Organization dependency from additional dependencies ${additionalDependencyName}:${dependency}`);
+
+                            this.organizationDependencies[additionalDependencyName] = dependency;
                         }
                     }
                 }
@@ -853,7 +895,7 @@ export abstract class Publish {
                     }
 
                     if (lastPublished === undefined || dependencyLastPublished > lastPublished) {
-                        logger.info(`Repository ${dependencyRepositoryName} recently published`);
+                        logger.info(`Dependency ${dependencyRepositoryName} recently published`);
 
                         // At least one dependency repository has been published since the last publication of this repository.
                         this._organizationDependenciesUpdated = true;
