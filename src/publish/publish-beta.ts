@@ -230,7 +230,7 @@ class PublishBeta extends Publish {
             });
 
             await this.runStep("commit", () => {
-                this.commitUpdatedPackageVersion("--all");
+                this.commitUpdatedPackageVersion();
             });
 
             await this.runStep("tag", () => {
