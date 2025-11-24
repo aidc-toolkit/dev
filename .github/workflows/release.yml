@@ -22,6 +22,9 @@ jobs:
         uses: aidc-toolkit/.github/actions/ref-branch@main
 
       - name: Build, test, publish
-        uses: aidc-toolkit/.github/actions/build-test-publish@${{ steps.ref-branch.outputs.branch_name }}
+        uses: jenseng/dynamic-uses@v1
+        env:
+          varsJSON: ${{ toJSON(vars) }}
         with:
-          vars: ${{ toJSON(vars) }}
+          uses: aidc-toolkit/.github/actions/build-test-publish@${{ steps.ref-branch.outputs.branch_name }}
+          with: '{ "vars": ${{ toJSON(env.varsJSON) }} }'
