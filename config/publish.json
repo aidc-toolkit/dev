@@ -35,11 +35,6 @@
       "lastBetaPublished": "2025-11-24T04:32:30.078Z",
       "lastBetaTag": "v0.9.19-beta"
     },
-    "app-generator": {
-      "dependencyType": "internal",
-      "lastBetaPublished": "2025-11-24T15:15:35.270Z",
-      "lastBetaTag": "v0.9.19-beta"
-    },
     "microsoft-add-in": {
       "dependencyType": "none",
       "lastBetaPublished": "2025-11-24T15:27:57.639Z",
