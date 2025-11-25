@@ -64,6 +64,7 @@ export const esLintConfigAIDCToolkit = defineConfig([
                 after: true
             }],
             "@stylistic/indent": ["error", 4],
+            "@stylistic/indent-binary-ops": ["error", 4],
             "@stylistic/member-delimiter-style": ["error", {
                 multiline: {
                     delimiter: "semi",
