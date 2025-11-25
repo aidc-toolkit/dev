@@ -50,5 +50,5 @@ export default defineConfig([
     ...esLintConfigAIDCToolkit,
     // Additional rules here as required.
     // ...
-);
+]);
 ```
