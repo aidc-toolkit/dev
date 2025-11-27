@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import type { Repository } from "./configuration";
 import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish.js";
 import { logger } from "./logger.js";
 
@@ -33,24 +34,51 @@ class PublishAlpha extends Publish {
     /**
      * @inheritDoc
      */
-    protected publish(): void {
-        let anyDependencyUpdates = false;
+    protected dependencyVersionFor(): string {
+        // Dependency version is always "alpha".
+        return "alpha";
+    }
 
-        // Check for external dependency updates, even if there are no changes.
-        for (const currentDependencies of [this.packageConfiguration.devDependencies, this.packageConfiguration.dependencies]) {
+    /**
+     * @inheritDoc
+     */
+    protected getPhaseDateTime(repository: Repository, phaseDateTime: Date): Date {
+        // If beta or production has been published since the last alpha, use that instead.
+        return this.latestDateTime(phaseDateTime, repository.phaseStates.beta?.dateTime, repository.phaseStates.production?.dateTime);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected isValidBranch(): boolean {
+        // Any branch is valid for alpha publication.
+        return true;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected publish(): void {
+        let anyExternalUpdates = false;
+
+        const repositoryState = this.repositoryState;
+        const packageConfiguration = repositoryState.packageConfiguration;
+
+        // Check for external updates, even if there are no changes.
+        for (const currentDependencies of [packageConfiguration.devDependencies, packageConfiguration.dependencies]) {
             if (currentDependencies !== undefined) {
-                for (const [dependency, version] of Object.entries(currentDependencies)) {
+                for (const [dependencyPackageName, version] of Object.entries(currentDependencies)) {
                     // Ignore organization dependencies.
-                    if (this.dependencyRepositoryName(dependency) === null && version.startsWith("^")) {
-                        const [latestVersion] = this.run(true, true, "npm", "view", dependency, "version");
+                    if (this.dependencyRepositoryName(dependencyPackageName) === null && version.startsWith("^")) {
+                        const [latestVersion] = this.run(true, true, "npm", "view", dependencyPackageName, "version");
 
                         if (latestVersion !== version.substring(1)) {
-                            logger.info(`Dependency ${dependency}@${version} ${!this._updateAll ? "pending update" : "updating"} to version ${latestVersion}.`);
+                            logger.info(`Dependency ${dependencyPackageName}@${version} ${!this._updateAll ? "pending update" : "updating"} to version ${latestVersion}.`);
 
                             if (this._updateAll) {
-                                currentDependencies[dependency] = `^${latestVersion}`;
+                                currentDependencies[dependencyPackageName] = `^${latestVersion}`;
 
-                                anyDependencyUpdates = true;
+                                anyExternalUpdates = true;
                             }
                         }
                     }
@@ -58,7 +86,7 @@ class PublishAlpha extends Publish {
             }
         }
 
-        if (anyDependencyUpdates) {
+        if (anyExternalUpdates) {
             // Save the dependency updates; this will be detected by call to anyChanges().
             this.savePackageConfiguration();
         }
@@ -67,23 +95,23 @@ class PublishAlpha extends Publish {
             logger.debug("Updating all dependencies");
 
             // Running this even if there are no dependency updates will update dependencies of dependencies.
-            this.run(false, false, "npm", "update", ...this.npmPlatformArgs);
+            this.run(false, false, "npm", "update", ...repositoryState.npmPlatformArgs);
         }
 
-        const anyChanges = this.anyChanges(this.repository.lastAlphaPublished, true) || this.organizationDependenciesUpdated;
+        const anyChanges = this.anyChanges(repositoryState.phaseDateTime, true) || repositoryState.anyDependenciesUpdated;
 
         if (anyChanges) {
-            const switchToAlpha = this.preReleaseIdentifier !== "alpha";
+            const switchToAlpha = repositoryState.preReleaseIdentifier !== "alpha";
 
             if (switchToAlpha) {
                 // Previous publication was beta or production.
-                this.updatePackageVersion(undefined, undefined, this.patchVersion + 1, "alpha");
+                this.updatePackageVersion(undefined, undefined, repositoryState.patchVersion + 1, "alpha");
 
                 // Use specified registry for organization until no longer in alpha mode.
                 this.run(false, false, "npm", "config", "set", this.atOrganizationRegistry, "--location", "project");
             }
 
-            if (this.organizationDependenciesUpdated && (switchToAlpha || !this._updateAll)) {
+            if (repositoryState.anyDependenciesUpdated && (switchToAlpha || !this._updateAll)) {
                 this.updateOrganizationDependencies();
             }
         }
@@ -95,10 +123,11 @@ class PublishAlpha extends Publish {
         this.run(false, false, "npm", "run", "build:dev", "--if-present");
 
         if (anyChanges) {
-            const nowISOString = new Date().toISOString();
+            const now = new Date();
+            const nowISOString = now.toISOString();
 
             // Nothing further required if this repository is not a dependency of others.
-            if (this.repository.dependencyType !== "none") {
+            if (repositoryState.repository.dependencyType !== "none") {
                 if (!this.dryRun) {
                     // Backup the package configuration file.
                     fs.renameSync(PACKAGE_CONFIGURATION_PATH, BACKUP_PACKAGE_CONFIGURATION_PATH);
@@ -113,9 +142,9 @@ class PublishAlpha extends Publish {
 
                     // Unpublish all prior alpha versions.
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Output is a JSON array.
-                    for (const version of JSON.parse(this.run(true, true, "npm", "view", this.packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
-                        if (/^\d+.\d+.\d+-alpha.\d+$/.test(version) && version !== this.packageConfiguration.version) {
-                            this.run(false, false, "npm", "unpublish", `${this.packageConfiguration.name}@${version}`);
+                    for (const version of JSON.parse(this.run(true, true, "npm", "view", packageConfiguration.name, "versions", "--json").join("\n")) as string[]) {
+                        if (/^\d+.\d+.\d+-alpha.\d+$/.test(version) && version !== packageConfiguration.version) {
+                            this.run(false, false, "npm", "unpublish", `${packageConfiguration.name}@${version}`);
                         }
                     }
                 } finally {
@@ -129,7 +158,9 @@ class PublishAlpha extends Publish {
 
             this.commitUpdatedPackageVersion(PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH);
 
-            this.repository.lastAlphaPublished = nowISOString;
+            this.updatePhaseState({
+                dateTime: now
+            });
         }
     }
 }

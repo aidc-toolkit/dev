@@ -49,3 +49,26 @@ export function omit<T extends object, K extends keyof T>(o: T, ...keys: K[]): O
 export function pick<T extends object, K extends keyof T>(o: T, ...keys: K[]): Pick<T, K> {
     return omitOrPick(false, o, ...keys);
 }
+
+/**
+ * Cast a property as a more narrow type.
+ *
+ * @param o
+ * Object.
+ *
+ * @param key
+ * Key of property to cast.
+ *
+ * @returns
+ * Single-key object with property cast as desired type.
+ */
+export function propertyAs<TAsType extends T[K], T extends object, K extends keyof T>(o: T, key: K): Readonly<Omit<T, K> extends T ? Partial<Record<K, TAsType>> : Record<K, TAsType>> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Type is determined by condition.
+    return (key in o ?
+        {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Force cast.
+            [key]: o[key] as TAsType
+        } :
+        {}
+    ) as ReturnType<typeof propertyAs<TAsType, T, K>>;
+}

@@ -4,6 +4,7 @@ import { setTimeout } from "node:timers/promises";
 import { Octokit } from "octokit";
 import { parse as yamlParse } from "yaml";
 import secureConfigurationJSON from "../../config/publish.secure.json";
+import type { Repository } from "./configuration";
 import { Publish } from "./publish.js";
 import { logger } from "./logger.js";
 
@@ -84,6 +85,52 @@ class PublishBeta extends Publish {
     }
 
     /**
+     * @inheritDoc
+     */
+    protected dependencyVersionFor(dependencyRepositoryName: string, dependencyRepository: Repository): string {
+        let dependencyVersion: string;
+
+        switch (dependencyRepository.dependencyType) {
+            case "external":
+                dependencyVersion = "beta";
+                break;
+
+            case "internal": {
+                const betaTag = dependencyRepository.phaseStates.beta?.tag;
+
+                if (betaTag === undefined) {
+                    throw new Error(`*** Internal error *** Beta tag not set for ${dependencyRepositoryName}`);
+                }
+
+                dependencyVersion = `${this.configuration.organization}/${dependencyRepositoryName}#${betaTag}`;
+            }
+                break;
+
+            default:
+                throw new Error(`Invalid dependency type "${dependencyRepository.dependencyType}" for dependency ${dependencyRepositoryName}`);
+        }
+
+        return dependencyVersion;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected getPhaseDateTime(repository: Repository, phaseDateTime: Date): Date {
+        return this.latestDateTime(phaseDateTime, repository.phaseStates.production?.dateTime);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    protected isValidBranch(): boolean {
+        const repositoryState = this.repositoryState;
+
+        // Branch for beta phase must match version.
+        return repositoryState.branch === `v${repositoryState.majorVersion}.${repositoryState.minorVersion}`;
+    }
+
+    /**
      * Run a step.
      *
      * Repository.
@@ -95,14 +142,20 @@ class PublishBeta extends Publish {
      * Callback to execute step.
      */
     private async runStep(step: Step, stepRunner: () => (void | Promise<void>)): Promise<void> {
-        if (this.repository.publishBetaStep === undefined || this.repository.publishBetaStep === step) {
+        const phaseStateStep = this.repositoryState.phaseState.step;
+
+        if (phaseStateStep === undefined || phaseStateStep === step) {
             logger.debug(`Running step ${step}`);
 
-            this.repository.publishBetaStep = step;
+            this.updatePhaseState({
+                step
+            });
 
             await stepRunner();
 
-            this.repository.publishBetaStep = undefined;
+            this.updatePhaseState({
+                step: undefined
+            });
         } else {
             logger.debug(`Skipping step ${step}`);
         }
@@ -117,7 +170,7 @@ class PublishBeta extends Publish {
         if (this.dryRun) {
             logger.info("Dry run: Validate workflow");
         } else {
-            const commitSHA = this.run(true, true, "git", "rev-parse", this.branch)[0];
+            const commitSHA = this.run(true, true, "git", "rev-parse", this.repositoryState.branch)[0];
 
             let completed = false;
             let queryCount = 0;
@@ -128,7 +181,7 @@ class PublishBeta extends Publish {
                 const response = await setTimeout(2000).then(
                     async () => this._octokit.rest.actions.listWorkflowRunsForRepo({
                         owner: this.configuration.organization,
-                        repo: this.repositoryName,
+                        repo: this.repositoryState.repositoryName,
                         head_sha: commitSHA
                     })
                 );
@@ -169,13 +222,15 @@ class PublishBeta extends Publish {
     protected async publish(): Promise<void> {
         let publish: boolean;
 
+        const repositoryState = this.repositoryState;
+
         // Scrap any incomplete publishing if pre-release identifier is not beta.
-        if (this.preReleaseIdentifier !== "beta") {
-            this.repository.publishBetaStep = undefined;
+        if (repositoryState.preReleaseIdentifier !== "beta") {
+            repositoryState.phaseState.step = undefined;
         }
 
-        if (this.preReleaseIdentifier === "alpha") {
-            if (this.anyChanges(this.repository.lastAlphaPublished, true)) {
+        if (repositoryState.preReleaseIdentifier === "alpha") {
+            if (this.anyChanges(repositoryState.repository.phaseStates.alpha?.dateTime, false)) {
                 throw new Error("Repository has changed since last alpha published");
             }
 
@@ -186,22 +241,23 @@ class PublishBeta extends Publish {
             // Revert to default registry for organization.
             this.run(false, false, "npm", "config", "delete", this.atOrganizationRegistry, "--location", "project");
         } else {
-            const startingPublication = this.repository.publishBetaStep === undefined;
+            const step = repositoryState.phaseState.step;
+            const startingPublication = step === undefined;
 
-            // Publish beta step is defined and not "complete" if previous attempt failed at that step.
-            publish = !startingPublication && this.repository.publishBetaStep !== "complete";
+            // Step is defined and not "complete" if previous attempt failed at that step.
+            publish = !startingPublication && step !== "complete";
 
             // Ignore changes after publication process has started.
-            if (startingPublication && this.anyChanges(this.repository.lastAlphaPublished, false)) {
-                throw new Error("Internal error, repository has changed without intermediate alpha publication");
+            if (startingPublication && this.anyChanges(repositoryState.repository.phaseStates.alpha?.dateTime, false)) {
+                throw new Error("Repository has changed since last alpha published");
             }
         }
 
         if (publish) {
-            const tag = `v${this.packageConfiguration.version}`;
+            const tag = `v${repositoryState.packageConfiguration.version}`;
 
-            if (this.repository.publishBetaStep !== undefined) {
-                logger.debug(`Repository failed at step "${this.repository.publishBetaStep}" on prior run`);
+            if (repositoryState.phaseState.step !== undefined) {
+                logger.debug(`Repository failed at step "${repositoryState.phaseState.step}" on prior run`);
             }
 
             const workflowsPath = ".github/workflows/";
@@ -236,6 +292,9 @@ class PublishBeta extends Publish {
 
             await this.runStep("build", () => {
                 this.run(false, false, "npm", "run", "build:release", "--if-present");
+
+                // Run test if present; must be part of build as correcting errors will require rebuild.
+                this.run(false, false, "npm", "run", "test", "--if-present");
             });
 
             await this.runStep("commit", () => {
@@ -247,7 +306,7 @@ class PublishBeta extends Publish {
             });
 
             await this.runStep("push", () => {
-                this.run(false, false, "git", "push", "--atomic", "origin", this.branch, tag);
+                this.run(false, false, "git", "push", "--atomic", "origin", repositoryState.branch, tag);
             });
 
             if (hasPushWorkflow) {
@@ -262,7 +321,7 @@ class PublishBeta extends Publish {
                 } else {
                     await this._octokit.rest.repos.createRelease({
                         owner: this.configuration.organization,
-                        repo: this.repositoryName,
+                        repo: repositoryState.repositoryName,
                         tag_name: tag,
                         name: `Release ${tag}`,
                         prerelease: true
@@ -276,9 +335,11 @@ class PublishBeta extends Publish {
                 });
             }
 
-            this.repository.lastBetaPublished = new Date().toISOString();
-            this.repository.lastBetaTag = tag;
-            this.repository.publishBetaStep = "complete";
+            this.updatePhaseState({
+                dateTime: new Date(),
+                tag,
+                step: "complete"
+            });
         }
     }
 
@@ -288,7 +349,8 @@ class PublishBeta extends Publish {
     protected override finalizeAll(): void {
         // Publication complete; reset steps to undefined for next run.
         for (const repository of Object.values(this.configuration.repositories)) {
-            repository.publishBetaStep = undefined;
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion -- All beta phase states are defined by this point.
+            repository.phaseStates.beta!.step = undefined;
         }
     }
 }

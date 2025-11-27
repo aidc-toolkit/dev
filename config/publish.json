@@ -7,49 +7,76 @@
         "src/publish/",
         "config/publish.json"
       ],
-      "lastBetaPublished": "2025-11-24T21:48:19.587Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T21:48:19.587Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "core": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-11-24T21:52:49.177Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T21:52:49.177Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "utility": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-11-24T21:54:54.413Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T21:54:54.413Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "gs1": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-11-24T21:55:58.917Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T21:55:58.917Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "demo": {
       "dependencyType": "none",
-      "lastBetaPublished": "2025-11-24T21:56:03.808Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T21:56:03.808Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "app-extension": {
       "dependencyType": "external",
-      "lastBetaPublished": "2025-11-24T21:56:40.696Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T21:56:40.696Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "microsoft-add-in": {
       "dependencyType": "none",
-      "lastBetaPublished": "2025-11-24T22:04:19.513Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T22:04:19.513Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     },
     "aidc-toolkit.github.io": {
       "directory": "doc",
-      "additionalDependencies": [
-        "core",
-        "utility",
-        "gs1"
-      ],
       "dependencyType": "none",
-      "lastBetaPublished": "2025-11-24T22:35:04.601Z",
-      "lastBetaTag": "v0.9.20-beta"
+      "phaseStates": {
+        "beta": {
+          "dateTime": "2025-11-24T22:35:04.601Z",
+          "tag": "v0.9.20-beta"
+        }
+      }
     }
   }
 }
