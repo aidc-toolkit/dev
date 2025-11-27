@@ -651,17 +651,25 @@ export abstract class Publish {
     protected updatePhaseState(phaseState: Partial<PhaseState>): void {
         const repositoryState = this.repositoryState;
 
+        const phaseStateDateTime = phaseState.dateTime !== undefined ?
+            {
+                // Git resolution is one second so round up to next second to ensure that comparisons work as expected.
+                dateTime: new Date(phaseState.dateTime.getTime() - phaseState.dateTime.getMilliseconds() + 1000)
+            } :
+            {};
+
         const updatedPhaseState = {
             ...this.repositoryState.phaseState,
-            ...phaseState
+            ...phaseState,
+            ...phaseStateDateTime
         };
 
         repositoryState.repository.phaseStates[this.phase] = updatedPhaseState;
         repositoryState.phaseState = updatedPhaseState;
 
         // Setting the phase date/time overrides the logic of its initial determination.
-        if (phaseState.dateTime !== undefined) {
-            repositoryState.phaseDateTime = phaseState.dateTime;
+        if (phaseStateDateTime.dateTime !== undefined) {
+            repositoryState.phaseDateTime = phaseStateDateTime.dateTime;
         }
     }
 
