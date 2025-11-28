@@ -1,7 +1,7 @@
 import * as fs from "node:fs";
 import type { Repository } from "./configuration";
-import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish.js";
 import { logger } from "./logger.js";
+import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish.js";
 
 const BACKUP_PACKAGE_CONFIGURATION_PATH = ".package.json";
 
@@ -122,10 +122,11 @@ class PublishAlpha extends Publish {
         // Run development build if present.
         this.run(false, false, "npm", "run", "build:dev", "--if-present");
 
+        // Run test if present.
+        this.run(false, false, "npm", "run", "test", "--if-present");
+
         if (anyChanges) {
             const now = new Date();
-            const nowISOString = now.toISOString();
-
             // Nothing further required if this repository is not a dependency of others.
             if (repositoryState.repository.dependencyType !== "none") {
                 if (!this.dryRun) {
@@ -135,7 +136,7 @@ class PublishAlpha extends Publish {
 
                 try {
                     // Package version is transient.
-                    this.updatePackageVersion(undefined, undefined, undefined, `alpha.${nowISOString.replaceAll(/\D/g, "").substring(0, 12)}`);
+                    this.updatePackageVersion(undefined, undefined, undefined, `alpha.${now.toISOString().replaceAll(/\D/g, "").substring(0, 12)}`);
 
                     // Publish to development NPM registry.
                     this.run(false, false, "npm", "publish", "--tag", "alpha");

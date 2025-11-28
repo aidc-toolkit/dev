@@ -292,9 +292,6 @@ class PublishBeta extends Publish {
 
             await this.runStep("build", () => {
                 this.run(false, false, "npm", "run", "build:release", "--if-present");
-
-                // Run test if present; must be part of build as correcting errors will require rebuild.
-                this.run(false, false, "npm", "run", "test", "--if-present");
             });
 
             await this.runStep("commit", () => {
