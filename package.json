@@ -28,13 +28,11 @@
     "publish-alpha": "tsx src/publish/publish-alpha.ts $*",
     "publish-beta": "tsx src/publish/publish-beta.ts $*"
   },
-  "devDependencies": {
-    "copy-files-from-to": "^3.13.0"
-  },
   "dependencies": {
     "@eslint/js": "^9.39.1",
     "@octokit/types": "^16.0.0",
     "@stylistic/eslint-plugin": "^5.6.1",
+    "copy-files-from-to": "^3.13.0",
     "eslint": "^9.39.1",
     "eslint-config-love": "^134.0.0",
     "eslint-plugin-jsdoc": "^61.4.1",
