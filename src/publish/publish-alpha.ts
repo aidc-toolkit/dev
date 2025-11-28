@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 import type { Repository } from "./configuration";
 import { logger } from "./logger.js";
 import { PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH, Publish } from "./publish.js";
@@ -56,9 +57,100 @@ class PublishAlpha extends Publish {
     }
 
     /**
+     * Parse parameter names in a resource string.
+     *
+     * @param s
+     * Resource string.
+     *
+     * @returns
+     * Array of parameter names.
+     */
+    private static parseParameterNames(s: string): string[] {
+        const parameterRegExp = /\{\{.+?}}/g;
+
+        const parameterNames: string[] = [];
+
+        let match: RegExpExecArray | null;
+
+        while ((match = parameterRegExp.exec(s)) !== null) {
+            parameterNames.push(match[1]);
+        }
+
+        return parameterNames;
+    }
+
+    /**
+     * Assert that locale resources are a type match for English (default) resources.
+     *
+     * @param enResources
+     * English resources.
+     *
+     * @param locale
+     * Locale.
+     *
+     * @param localeResources
+     * Locale resources.
+     *
+     * @param parent
+     * Parent key name (set recursively).
+     */
+    private static assertValidResources(enResources: object, locale: string, localeResources: object, parent?: string): void {
+        const enResourcesMap = new Map<string, object>(Object.entries(enResources));
+        const localeResourcesMap = new Map<string, object>(Object.entries(localeResources));
+
+        const isFullLocale = locale.includes("-");
+
+        for (const [enKey, enValue] of enResourcesMap) {
+            const enFullKey = `${parent === undefined ? "" : `${parent}.`}${enKey}`;
+
+            const localeValue = localeResourcesMap.get(enKey);
+
+            if (localeValue !== undefined) {
+                const enValueType = typeof enValue;
+                const localeValueType = typeof localeValue;
+
+                if (localeValueType !== enValueType) {
+                    throw new Error(`Mismatched value type ${localeValueType} for key ${enFullKey} in ${locale} resources (expected ${enValueType})`);
+                }
+
+                if (enValueType === "string") {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Value is known to be string.
+                    const enParameterNames = PublishAlpha.parseParameterNames(enValue as unknown as string);
+
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Value is known to be string.
+                    const localeParameterNames = PublishAlpha.parseParameterNames(localeValue as unknown as string);
+
+                    for (const enParameterName of enParameterNames) {
+                        if (!localeParameterNames.includes(enParameterName)) {
+                            throw new Error(`Missing parameter ${enParameterName} for key ${enFullKey} in ${locale} resources`);
+                        }
+                    }
+
+                    for (const localeParameterName of localeParameterNames) {
+                        if (!enParameterNames.includes(localeParameterName)) {
+                            throw new Error(`Extraneous parameter ${localeParameterName} for key ${enFullKey} in ${locale} resources`);
+                        }
+                    }
+                } else if (enValueType === "object") {
+                    PublishAlpha.assertValidResources(enValue, locale, localeValue, `${parent === undefined ? "" : `${parent}.`}${enKey}`);
+                }
+            // Full locale falls back to language so ignore if missing.
+            } else if (!isFullLocale) {
+                throw new Error(`Missing key ${enFullKey} in ${locale} resources`);
+            }
+        }
+
+        for (const [localeKey] of localeResourcesMap) {
+            if (!enResourcesMap.has(localeKey)) {
+                throw new Error(`Extraneous key ${parent === undefined ? "" : `${parent}.`}${localeKey} in ${locale} resources`);
+            }
+        }
+    }
+
+    /**
      * @inheritDoc
      */
-    protected publish(): void {
+    protected async publish(): Promise<void> {
         let anyExternalUpdates = false;
 
         const repositoryState = this.repositoryState;
@@ -98,9 +190,8 @@ class PublishAlpha extends Publish {
             this.run(false, false, "npm", "update", ...repositoryState.npmPlatformArgs);
         }
 
-        const anyChanges = this.anyChanges(repositoryState.phaseDateTime, true) || repositoryState.anyDependenciesUpdated;
-
-        if (anyChanges) {
+        // Nothing to do if there are no changes and dependencies haven't been updated.
+        if (this.anyChanges(repositoryState.phaseDateTime, true) || repositoryState.anyDependenciesUpdated) {
             const switchToAlpha = repositoryState.preReleaseIdentifier !== "alpha";
 
             if (switchToAlpha) {
@@ -114,18 +205,56 @@ class PublishAlpha extends Publish {
             if (repositoryState.anyDependenciesUpdated && (switchToAlpha || !this._updateAll)) {
                 this.updateOrganizationDependencies();
             }
-        }
 
-        // Run lint if present.
-        this.run(false, false, "npm", "run", "lint", "--if-present");
+            // Run lint if present.
+            this.run(false, false, "npm", "run", "lint", "--if-present");
 
-        // Run development build if present.
-        this.run(false, false, "npm", "run", "build:dev", "--if-present");
+            const localePath = path.resolve("src/locale");
 
-        // Run test if present.
-        this.run(false, false, "npm", "run", "test", "--if-present");
+            // Check for localization.
+            if (fs.existsSync(localePath) && fs.statSync(localePath).isDirectory()) {
+                const localeResourcesMap = new Map<string, object>();
 
-        if (anyChanges) {
+                for (const entry of fs.readdirSync(localePath)) {
+                    const localeEntryPath = path.resolve(localePath, entry);
+
+                    if (fs.statSync(localeEntryPath).isDirectory()) {
+                        const resourcesPath = path.resolve(localeEntryPath, "locale-resources.ts");
+
+                        if (fs.existsSync(resourcesPath)) {
+                            // eslint-disable-next-line no-await-in-loop -- Await cost is negligible.
+                            const resources: unknown = await import(resourcesPath);
+
+                            if (typeof resources !== "object" || resources === null || !("default" in resources) || typeof resources.default !== "object" || resources.default === null) {
+                                throw new Error(`${resourcesPath} is not a valid locale resources file`);
+                            }
+
+                            localeResourcesMap.set(entry, resources.default);
+                        }
+                    }
+                }
+
+                if (localeResourcesMap.size !== 0) {
+                    const enResources = localeResourcesMap.get("en");
+
+                    if (enResources === undefined) {
+                        throw new Error("English resources file not found");
+                    }
+
+                    for (const [locale, resources] of localeResourcesMap.entries()) {
+                        if (locale !== "en") {
+                            PublishAlpha.assertValidResources(enResources, locale, resources);
+                        }
+                    }
+                }
+            }
+
+            // Run development build if present.
+            this.run(false, false, "npm", "run", "build:dev", "--if-present");
+
+            // Run test if present.
+            this.run(false, false, "npm", "run", "test", "--if-present");
+
             const now = new Date();
             // Nothing further required if this repository is not a dependency of others.
             if (repositoryState.repository.dependencyType !== "none") {
