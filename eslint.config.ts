@@ -1,3 +1,3 @@
-import { esLintConfigAIDCToolkit } from "./dist";
+import { esLintConfigAIDCToolkit } from "./src";
 
 export default esLintConfigAIDCToolkit;
