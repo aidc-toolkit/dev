@@ -551,11 +551,11 @@ export abstract class Publish {
             modifiedFiles.push("--all");
         } else {
             for (const line of this.run(true, true, "git", "status", ...files, "--porcelain")) {
-                const status = line.substring(0, 3);
+                const status = line.substring(0, 2);
                 const modifiedFile = line.substring(3);
 
                 // Only interest is in local additions and modifications with no conflicts.
-                if (status !== "A  " && status !== " M " && status !== "AM ") {
+                if (status !== "A " && status !== " M" && status !== "AM" && status !== "M ") {
                     throw new Error(`Unsupported status "${status}" for ${modifiedFile}`);
                 }
 

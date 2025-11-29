@@ -198,6 +198,8 @@ class PublishAlpha extends Publish {
                 // Previous publication was beta or production.
                 this.updatePackageVersion(undefined, undefined, repositoryState.patchVersion + 1, "alpha");
 
+                this.commitUpdatedPackageVersion(PACKAGE_CONFIGURATION_PATH);
+
                 // Use specified registry for organization until no longer in alpha mode.
                 this.run(false, false, "npm", "config", "set", this.atOrganizationRegistry, "--location", "project");
             }
@@ -286,7 +288,7 @@ class PublishAlpha extends Publish {
                 }
             }
 
-            this.commitUpdatedPackageVersion(PACKAGE_CONFIGURATION_PATH, PACKAGE_LOCK_CONFIGURATION_PATH);
+            this.commitUpdatedPackageVersion(PACKAGE_LOCK_CONFIGURATION_PATH);
 
             this.updatePhaseState({
                 dateTime: now
