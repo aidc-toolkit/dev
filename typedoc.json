@@ -1,7 +1,9 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "exclude": ["src/locale/**/locale-strings.ts"],
+  "entryPoints": ["../../../src/index.ts"],
+  "exclude": ["../../../src/locale/**/locale-strings.ts"],
   "sourceLinkExternal": true,
+  "gitRevision": "v1.0",
   "groupOrder": [
     "Enumerations",
     "Type Aliases",

@@ -11,12 +11,14 @@
     // Modules.
     "module": "es2022",
     "moduleResolution": "bundler",
+    "noUncheckedSideEffectImports": true,
     "resolveJsonModule": true,
 
     // Emit.
     "declaration": true,
 
     // Interop constraints.
+    "erasableSyntaxOnly": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 

@@ -15,3 +15,4 @@
  * limitations under the License.
  */
 export * from "./eslint-config-template.js";
+export * from "./tsup-config-template.js";

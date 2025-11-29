@@ -18,9 +18,8 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint",
-    "build:core": "rimraf dist && tsc --project",
-    "build:dev": "npm run build:core -- tsconfig-build-dev-local.json",
-    "build:release": "npm run build:core -- tsconfig-build-local.json",
+    "build:dev": "tsup --define.mode=dev",
+    "build:release": "tsup",
     "build:doc": "npm run build:dev",
     "publish-alpha": "tsx src/publish/publish-alpha.ts $*",
     "publish-beta": "tsx src/publish/publish-beta.ts $*"
@@ -38,6 +37,7 @@
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
     "tslog": "^4.10.2",
+    "tsup": "^8.5.1",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.0",
