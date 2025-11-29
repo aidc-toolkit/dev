@@ -14,5 +14,5 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export * from "./eslint-config-template.js";
-export * from "./tsup-config-template.js";
+export * from "./eslint-config-template";
+export * from "./tsup-config-template";

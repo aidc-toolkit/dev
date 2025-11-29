@@ -9,9 +9,9 @@ import {
     type Repository,
     saveConfiguration,
     SHARED_CONFIGURATION_PATH
-} from "./configuration.js";
-import { logger, setLogLevel } from "./logger.js";
-import { pick } from "./type-helper.js";
+} from "./configuration";
+import { logger, setLogLevel } from "./logger";
+import { pick } from "./type-helper";
 
 export const PACKAGE_CONFIGURATION_PATH = "package.json";
 
