@@ -3,7 +3,7 @@
   "entryPoints": ["../../../src/index.ts"],
   "exclude": ["../../../src/locale/**/locale-strings.ts"],
   "sourceLinkExternal": true,
-  "gitRevision": "v1.0",
+  "gitRevision": "{branch}",
   "groupOrder": [
     "Enumerations",
     "Type Aliases",
