@@ -106,21 +106,6 @@ interface JSONSharedRepository extends Omit<SharedRepository, "dependencyType" |
  */
 interface LocalRepository {
     /**
-     * Platform if building across platforms, e.g., macOS hosting Windows on Parallels.
-     */
-    readonly platform?: {
-        /**
-         * CPU architecture of native modules to install.
-         */
-        readonly cpu: string;
-
-        /**
-         * OS of native modules to install.
-         */
-        readonly os: string;
-    };
-
-    /**
      * Alpha phase state if any.
      */
     readonly phaseStates?: Readonly<Partial<Record<"alpha", PhaseState>>>;
@@ -300,7 +285,6 @@ export function saveConfiguration(configuration: Configuration, dryRun: boolean)
     const jsonLocalConfiguration: JSONLocalConfiguration = {
         ...pick(configuration, "logLevel", "alphaRegistry"),
         repositories: Object.fromEntries(Object.entries(configuration.repositories).map(([repositoryName, repository]) => [repositoryName, {
-            ...pick(repository, "platform"),
             phaseStates: toJSONPhaseStates(pick(repository.phaseStates, "alpha"))
         }]))
     };

@@ -187,7 +187,7 @@ class PublishAlpha extends Publish {
             logger.debug("Updating all dependencies");
 
             // Running this even if there are no dependency updates will update dependencies of dependencies.
-            this.run(false, false, "npm", "update", ...repositoryState.npmPlatformArgs);
+            this.run(false, false, "npm", "update");
         }
 
         // Nothing to do if there are no changes and dependencies haven't been updated.

@@ -67,11 +67,6 @@ interface RepositoryState {
     phaseDateTime: Date | undefined;
 
     /**
-     * NPM platform arguments if any.
-     */
-    readonly npmPlatformArgs: readonly string[];
-
-    /**
      * Branch.
      */
     readonly branch: string;
@@ -628,7 +623,7 @@ export abstract class Publish {
 
         logger.debug(`Updating organization dependencies [${repositoryState.allDependencyPackageNames.join(", ")}]`);
 
-        this.run(false, false, "npm", "update", ...repositoryState.allDependencyPackageNames, ...this.repositoryState.npmPlatformArgs);
+        this.run(false, false, "npm", "update", ...repositoryState.allDependencyPackageNames);
     }
 
     /**
@@ -714,15 +709,6 @@ export abstract class Publish {
                 try {
                     const phaseDateTime = this.getPhaseDateTime(repository, phaseState.dateTime);
 
-                    const npmPlatformArgs = repository.platform !== undefined ?
-                        [
-                            "--cpu",
-                            repository.platform.cpu,
-                            "--os",
-                            repository.platform.os
-                        ] :
-                        [];
-
                     const branch = this.run(true, true, "git", "branch", "--show-current")[0];
 
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- Package configuration format is known.
@@ -804,7 +790,6 @@ export abstract class Publish {
                         repository,
                         phaseState,
                         phaseDateTime,
-                        npmPlatformArgs,
                         branch,
                         packageConfiguration,
                         majorVersion,
