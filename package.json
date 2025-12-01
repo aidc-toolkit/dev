@@ -20,15 +20,7 @@
     "lint": "eslint",
     "build:dev": "tsup --define.mode=dev",
     "build:release": "tsup",
-    "build:doc": "npm run build:dev",
-    "publish-alpha": "tsx src/publish/publish-alpha.ts $*",
-    "publish-beta": "tsx src/publish/publish-beta.ts $*"
-  },
-  "devDependencies": {
-    "@octokit/types": "^16.0.0",
-    "octokit": "^5.0.5",
-    "tslog": "^4.10.2",
-    "yaml": "^2.8.1"
+    "build:doc": "npm run build:dev"
   },
   "dependencies": {
     "@eslint/js": "^9.39.1",
