@@ -21,8 +21,9 @@
   "scripts": {
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "lint": "eslint",
-    "build:dev": "tsup --define.mode=dev",
-    "build:release": "tsup",
+    "tsc:core": "tsc --project tsconfig-src.json",
+    "build:dev": "rimraf dist && npm run tsc:core -- --declarationMap --sourceMap",
+    "build:release": "npm run tsc:core -- --noEmit && tsup",
     "build:doc": "npm run build:dev"
   },
   "dependencies": {
@@ -33,6 +34,7 @@
     "eslint-config-love": "^136.0.0",
     "eslint-plugin-jsdoc": "^61.4.1",
     "jiti": "^2.6.1",
+    "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
