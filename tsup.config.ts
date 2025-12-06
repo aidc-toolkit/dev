@@ -1,3 +1,4 @@
-import { tsupConfigAIDCToolkit } from "./src";
+import { defineConfig } from "tsup";
+import { tsupConfig } from "./src";
 
-export default tsupConfigAIDCToolkit;
+export default defineConfig(tsupConfig);

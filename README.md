@@ -18,40 +18,15 @@ The AIDC Toolkit `dev` package contains development artefacts only; it is not in
 
 ## TypeScript Configuration
 
-All AIDC Toolkit packages are expected to be built the same way, which implies that they all have the same TypeScript configuration. This is supported by the [`tsconfig.json` file](tsconfig.json) in this package. Core changes should be managed in that file, with other packages declaring their own `tsconfig.json` as follows:
+All AIDC Toolkit packages are expected to be built the same way, which implies that they all have the same TypeScript configuration. This is supported by the [`tsconfig.json` file](tsconfig-template.json) in this package. Core changes should be managed in that file, with other packages declaring their own `tsconfig.json` as follows:
 
 ```json
 {
-  "extends": "@aidc-toolkit/dev/tsconfig.json"
+  "extends": "@aidc-toolkit/dev/tsconfig-template.json"
 }
 ```
 
 Options specific to the package may override or supplement the default options if required.
-
-## tsup Configuration
-
-AIDC Toolkit library packages are bundled using [tsup](https://tsup.egoist.dev). This is supported by the [`tsup-config-template.ts` file](src/tsup-config-template.ts) in this package. Core changes should be managed in that file, with other packages declaring their own `tsup.config.ts` file as follows:
-
-```typescript
-import { tsupConfigAIDCToolkit } from "@aidc-toolkit/dev";
-
-export default tsupConfigAIDCToolkit;
-```
-
-Options specific to the package may override or supplement the default options if required.If so, the `tsup.config.ts` file should be declared as follows:
-
-```typescript
-import { tsupConfigAIDCToolkit } from "@aidc-toolkit/dev";
-import { defineConfig } from "tsup";
-// Additional imports here as required.
-// ...
-
-export default defineConfig([
-    tsupConfigAIDCToolkit,
-    // Additional options here as required.
-    // ...
-]);
-```
 
 ## ESLint Configuration
 
@@ -76,4 +51,34 @@ export default defineConfig([
     // Additional rules here as required.
     // ...
 ]);
+```
+
+## tsup Configuration
+
+AIDC Toolkit library packages are bundled using [tsup](https://tsup.egoist.dev). This is supported by the [`tsup-config-template.ts` file](src/tsup-config-template.ts) in this package. Core changes should be managed in that file, with other packages declaring their own `tsup.config.ts` file as follows:
+
+```typescript
+import { tsupConfig } from "@aidc-toolkit/dev";
+import { defineConfig } from "tsup";
+
+export default defineConfig(tsupConfig);
+```
+
+Options specific to the package may override or supplement the default options if required.If so, the `tsup.config.ts` file should be declared as follows:
+
+```typescript
+import { tsupConfig } from "@aidc-toolkit/dev";
+import { defineConfig } from "tsup";
+// Additional imports here as required.
+// ...
+
+export default defineConfig((options) => {
+    const updatedOptions = tsupConfig(options);
+    
+    return {
+        ...updatedOptions,
+        // Additional options here as required.
+        // ...
+    }
+});
 ```
