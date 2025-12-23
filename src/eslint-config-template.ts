@@ -94,6 +94,9 @@ export const esLintConfigAIDCToolkit = defineConfig([
                 after: true
             }],
 
+            "jsdoc/no-multi-asterisks": ["warn", {
+                allowWhitespace: true
+            }],
             "jsdoc/require-description": ["warn", {
                 contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
             }],
