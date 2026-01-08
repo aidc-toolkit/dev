@@ -35,6 +35,10 @@ export const esLintConfigAIDCToolkit = defineConfig([
             // Handled by @typescript-eslint/no-unused-vars.
             "no-unused-vars": "off",
 
+            "require-unicode-regexp": ["error", {
+                requireFlag: "u"
+            }],
+
             "@typescript-eslint/class-literal-property-style": "off",
             "@typescript-eslint/class-methods-use-this": "off",
             "@typescript-eslint/init-declarations": "off",
