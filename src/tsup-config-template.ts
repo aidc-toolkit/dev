@@ -11,7 +11,8 @@ import type { Options } from "tsup";
  * Updated options.
  */
 export function tsupConfig(options: Options): Options {
-    const developmentMode = options.define?.["mode"] === "dev";
+    // Mode isn't set for production build.
+    const developmentMode = options.define?.["build"] !== undefined;
 
     return {
         ...options,
