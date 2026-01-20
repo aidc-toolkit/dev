@@ -2,7 +2,13 @@
   "extends": "./tsconfig-template.json",
   "include": ["./src/**/*"],
   "compilerOptions": {
+    // Modules.
+    "rootDir": "src",
+
     // Emit.
-    "outDir": "dist"
+    "outDir": "dist",
+
+    // Projects.
+    "composite": true
   }
 }
