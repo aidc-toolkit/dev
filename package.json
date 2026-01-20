@@ -1,6 +1,6 @@
 {
   "name": "@aidc-toolkit/dev",
-  "version": "1.0.33-beta",
+  "version": "1.0.34-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
@@ -21,10 +21,11 @@
   "scripts": {
     "lint": "eslint",
     "tsc-src": "tsc --project tsconfig-src.json",
-    "build:alpha": "rimraf dist && npm run tsc-src -- --declarationMap --sourceMap",
-    "build:beta": "npm run build:alpha",
+    "build:non-prod": "rimraf dist tsconfig-src.tsbuildinfo && npm run tsc-src -- --declarationMap --sourceMap",
+    "build:alpha": "npm run build:non-prod && tsc --project tsconfig-config.json --noEmit",
+    "build:beta": "npm run build:non-prod",
     "build:prod": "npm run tsc-src -- --noEmit && tsup",
-    "build:doc": "npm run build:alpha",
+    "build:doc": "npm run build:non-prod",
     "copy-workflows": "copy-files-from-to --config copy-workflows.json"
   },
   "devDependencies": {
@@ -36,7 +37,7 @@
     "@types/node": "^25.0.9",
     "eslint": "^9.39.2",
     "eslint-config-love": "^145.0.0",
-    "eslint-plugin-jsdoc": "^62.2.0",
+    "eslint-plugin-jsdoc": "^62.3.0",
     "jiti": "^2.6.1",
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
