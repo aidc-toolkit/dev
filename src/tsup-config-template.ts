@@ -11,8 +11,8 @@ import type { Options } from "tsup";
  * Updated options.
  */
 export function tsupConfig(options: Options): Options {
-    // Mode isn't set for production build.
-    const developmentMode = options.define?.["build"] !== undefined;
+    // Build is undefined for production.
+    const isDevelopmentBuild = options.define?.["build"] !== undefined;
 
     return {
         ...options,
@@ -21,8 +21,8 @@ export function tsupConfig(options: Options): Options {
         entry: ["src/index.ts"],
         format: ["esm", "cjs"],
         dts: true,
-        minify: !developmentMode,
-        sourcemap: developmentMode,
+        minify: !isDevelopmentBuild,
+        sourcemap: isDevelopmentBuild,
         clean: true
     };
 }
