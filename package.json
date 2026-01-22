@@ -1,6 +1,6 @@
 {
   "name": "@aidc-toolkit/dev",
-  "version": "1.0.34-beta",
+  "version": "1.0.35-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
@@ -34,9 +34,9 @@
   "dependencies": {
     "@eslint/js": "^9.39.2",
     "@stylistic/eslint-plugin": "^5.7.0",
-    "@types/node": "^25.0.9",
+    "@types/node": "^25.0.10",
     "eslint": "^9.39.2",
-    "eslint-config-love": "^145.0.0",
+    "eslint-config-love": "^147.0.0",
     "eslint-plugin-jsdoc": "^62.3.0",
     "jiti": "^2.6.1",
     "rimraf": "^6.1.2",
