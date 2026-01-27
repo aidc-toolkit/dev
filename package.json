@@ -1,6 +1,6 @@
 {
   "name": "@aidc-toolkit/dev",
-  "version": "1.0.39-beta",
+  "version": "1.0.40-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
@@ -24,7 +24,7 @@
     "build:non-prod": "rimraf dist tsconfig-src.tsbuildinfo && npm run tsc-src -- --declarationMap --sourceMap",
     "build:alpha": "npm run build:non-prod && tsc --project tsconfig-config.json --noEmit",
     "build:beta": "npm run build:non-prod",
-    "build:prod": "npm run tsc-src -- --noEmit && tsup",
+    "build:prod": "npm run tsc-src -- --noEmit && tsup --tsconfig tsconfig-tsup.json",
     "build:doc": "npm run build:non-prod",
     "copy-workflows": "copy-files-from-to --config copy-workflows.json"
   },
