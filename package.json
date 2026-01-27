@@ -1,6 +1,6 @@
 {
   "name": "@aidc-toolkit/dev",
-  "version": "1.0.38-beta",
+  "version": "1.0.39-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
   "type": "module",
   "main": "dist/index.js",
@@ -43,6 +43,6 @@
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.53.1"
+    "typescript-eslint": "^8.54.0"
   }
 }
