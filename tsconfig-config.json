@@ -1,12 +1,9 @@
 {
   "extends": "./tsconfig-template.json",
-  "include": [],
+  "files": ["./eslint.config.ts", "./tsup.config.ts"],
   "references": [
     {
       "path": "./tsconfig-src.json"
-    },
-    {
-      "path": "./tsconfig-config.json"
     }
   ]
 }

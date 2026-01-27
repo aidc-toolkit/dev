@@ -1,5 +1,5 @@
 /*!
- * Copyright © 2024-2025 Dolphin Data Development Ltd. and AIDC Toolkit
+ * Copyright © 2024-2026 Dolphin Data Development Ltd. and AIDC Toolkit
  * contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,5 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 export * from "./eslint-config-template.js";
-export * from "./utility.js";
+export * from "./tsup-config-template.js";

@@ -2,17 +2,18 @@ import js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import esLintConfigLove from "eslint-config-love";
 import jsdoc from "eslint-plugin-jsdoc";
+import { defineConfig } from "eslint/config";
 import tseslint from "typescript-eslint";
 
-export const esLintConfigAIDCToolkit = tseslint.config(
+export const esLintConfigAIDCToolkit = defineConfig([
     {
         ignores: ["dist"]
     },
+    esLintConfigLove,
     js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
     stylistic.configs.recommended,
     jsdoc.configs["flat/recommended-typescript"],
-    esLintConfigLove,
     {
         languageOptions: {
             parserOptions: {
@@ -28,9 +29,15 @@ export const esLintConfigAIDCToolkit = tseslint.config(
             "complexity": "off",
             "max-depth": ["error", 10],
             "max-lines": "off",
+            "no-negated-condition": "off",
+            "no-plusplus": "off",
 
             // Handled by @typescript-eslint/no-unused-vars.
             "no-unused-vars": "off",
+
+            "require-unicode-regexp": ["error", {
+                requireFlag: "u"
+            }],
 
             "@typescript-eslint/class-literal-property-style": "off",
             "@typescript-eslint/class-methods-use-this": "off",
@@ -40,15 +47,13 @@ export const esLintConfigAIDCToolkit = tseslint.config(
             "@typescript-eslint/no-empty-object-type": "off",
             "@typescript-eslint/no-magic-numbers": "off",
             "@typescript-eslint/no-unnecessary-type-parameters": "off",
-            "@typescript-eslint/no-unused-vars": [
-                "error",
-                {
-                    argsIgnorePattern: "^_",
-                    varsIgnorePattern: "^_",
-                    caughtErrorsIgnorePattern: "^_"
-                }
-            ],
+            "@typescript-eslint/no-unused-vars": ["error", {
+                argsIgnorePattern: "^_",
+                varsIgnorePattern: "^_",
+                caughtErrorsIgnorePattern: "^_"
+            }],
             "@typescript-eslint/prefer-destructuring": "off",
+            "@typescript-eslint/restrict-template-expressions": "off",
             "@typescript-eslint/unbound-method": ["error", {
                 ignoreStatic: true
             }],
@@ -63,6 +68,7 @@ export const esLintConfigAIDCToolkit = tseslint.config(
                 after: true
             }],
             "@stylistic/indent": ["error", 4],
+            "@stylistic/indent-binary-ops": ["error", 4],
             "@stylistic/member-delimiter-style": ["error", {
                 multiline: {
                     delimiter: "semi",
@@ -92,6 +98,9 @@ export const esLintConfigAIDCToolkit = tseslint.config(
                 after: true
             }],
 
+            "jsdoc/no-multi-asterisks": ["warn", {
+                allowWhitespace: true
+            }],
             "jsdoc/require-description": ["warn", {
                 contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
             }],
@@ -101,6 +110,7 @@ export const esLintConfigAIDCToolkit = tseslint.config(
             "jsdoc/require-returns": ["warn", {
                 checkGetters: false
             }],
+            "jsdoc/require-yields-type": "off",
             "jsdoc/tag-lines": ["warn", "any", {
                 count: 1,
                 startLines: 1
@@ -118,4 +128,4 @@ export const esLintConfigAIDCToolkit = tseslint.config(
             "@typescript-eslint/no-unsafe-type-assertion": "off"
         }
     }
-);
+]);

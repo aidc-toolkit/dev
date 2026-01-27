@@ -4,11 +4,29 @@ on:
   release:
     types:
       - published
-  push:
-    branches:
-      - test-release
+
+permissions:
+  id-token: write
 
 jobs:
   release:
-    uses: aidc-toolkit/dev/.github/workflows/_release.yml@main
-    secrets: inherit
+    environment:
+      name: npm
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout default repository
+        uses: actions/checkout@v6
+
+      - name: Reference branch
+        id: ref-branch
+        uses: aidc-toolkit/.github/actions/ref-branch@main
+
+      - name: Build, test, publish
+        uses: jenseng/dynamic-uses@v1
+        env:
+          varsJSON: ${{ toJSON(vars) }}
+        with:
+          uses: aidc-toolkit/.github/actions/build-test-publish@${{ steps.ref-branch.outputs.branch_name }}
+          with: '{ "vars": ${{ toJSON(env.varsJSON) }} }'

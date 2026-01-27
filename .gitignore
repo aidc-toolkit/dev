@@ -1,6 +1,5 @@
 /**/.DS_Store
 /.npmrc
-/package-lock.json
 /node_modules/
 /dist/
-/config/*.secure.json
+*.tsbuildinfo
