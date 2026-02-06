@@ -26,6 +26,6 @@ jobs:
       - name: Build, test, publish
         uses: aidc-toolkit/.github/actions/build-test-publish@main
         with:
-          node_version: vars.NODE_VERSION
-          terminal_pre_build: vars.TERMINAL_PRE_BUILD
-          terminal_post_build: vars.TERMINAL_POST_BUILD
+          node_version: ${{ vars.NODE_VERSION }}
+          terminal_pre_build: ${{ vars.TERMINAL_PRE_BUILD }}
+          terminal_post_build: ${{ vars.TERMINAL_POST_BUILD }}
