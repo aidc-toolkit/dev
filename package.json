@@ -2,6 +2,11 @@
   "name": "@aidc-toolkit/dev",
   "version": "2.0.0-alpha",
   "description": "Shared development artefacts for AIDC Toolkit",
+  "keywords": [
+    "aidc",
+    "barcode",
+    "rfid"
+  ],
   "type": "module",
   "main": "dist/index.js",
   "homepage": "https://aidc-toolkit.com",
