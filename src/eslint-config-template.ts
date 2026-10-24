@@ -55,7 +55,7 @@ const recommendedConfigs: ConfigObject[] = [
     js.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
     stylistic.configs.recommended,
-    jsdoc.configs["flat/recommended-typescript"]
+    jsdoc.configs["flat/recommended-tsdoc-error"]
 ];
 
 const overrideRecommendedConfig: ConfigObject = {
@@ -136,10 +136,10 @@ const overrideRecommendedConfig: ConfigObject = {
             allowWhitespace: true
         }],
         "jsdoc/require-description": ["warn", {
-            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
+            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSMethodSignature", "TSModuleDeclaration", "TSPropertySignature", "TSTypeAliasDeclaration"]
         }],
         "jsdoc/require-jsdoc": ["warn", {
-            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSModuleDeclaration", "TSTypeAliasDeclaration"]
+            contexts: ["ClassDeclaration", "ClassProperty", "FunctionDeclaration", "MethodDefinition", "TSEnumDeclaration", "TSInterfaceDeclaration", "TSMethodSignature", "TSModuleDeclaration", "TSPropertySignature", "TSTypeAliasDeclaration"]
         }],
         "jsdoc/require-returns": ["warn", {
             checkGetters: false
