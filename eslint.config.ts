@@ -1,3 +1,3 @@
-import { esLintConfigAIDCToolkit } from "./src/index.js";
+import { esLintDefineAIDCToolkitConfig } from "./src/index.js";
 
-export default esLintConfigAIDCToolkit;
+export default esLintDefineAIDCToolkitConfig();
