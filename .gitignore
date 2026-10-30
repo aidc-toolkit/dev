@@ -1,6 +1,5 @@
 /**/.DS_Store
 /.npmrc
-/.npmignore
 /node_modules/
 /dist/
 *.tsbuildinfo
