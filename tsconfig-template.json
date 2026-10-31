@@ -23,8 +23,8 @@
     "forceConsistentCasingInFileNames": true,
 
     // Language and environment.
-    "target": "es2024",
-    "lib": ["ES2024"],
+    "target": "es2022",
+    "lib": ["ES2022"],
 
     // Completeness.
     "skipLibCheck": true
