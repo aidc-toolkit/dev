@@ -29,21 +29,31 @@ Options specific to the package may override or supplement the default options i
 All AIDC Toolkit packages are expected to follow a common coding style, enforced by [ESLint](https://eslint.org/), which implies that they all have the same ESLint configuration. This is supported by the [`eslint-config-template.ts` file](src/eslint-config-template.ts) in this package. Core changes should be managed in that file, with other packages declaring their own `eslint.config.ts` file as follows:
 
 ```typescript
-import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
+import { esLintDefineAIDCToolkitConfig } from "@aidc-toolkit/dev";
 
-export default esLintConfigAIDCToolkit;
+export default esLintDefineAIDCToolkitConfig();
 ```
+
+The default configuration assumes no test files and no React support. Profiles for these may be selected as follows:
+
+```typescript
+import { esLintDefineAIDCToolkitConfig, ESLintProfiles } from "@aidc-toolkit/dev";
+
+export default esLintDefineAIDCToolkitConfig(ESLintProfiles.Test);
+```
+
+For React, use `ESLintProfiles.React`. Multiple profiles may be added.
 
 Rules specific to the package may override or supplement the default rules if required. If so, the `eslint.config.ts` file should be declared as follows:
 
 ```typescript
-import { esLintConfigAIDCToolkit } from "@aidc-toolkit/dev";
+import { esLintDefineAIDCToolkitConfig } from "@aidc-toolkit/dev";
 import { defineConfig } from "eslint/config";
 // Additional imports here as required.
 // ...
 
 export default defineConfig([
-    ...esLintConfigAIDCToolkit,
+    ...esLintDefineAIDCToolkitConfig(),
     // Additional rules here as required.
     // ...
 ]);
