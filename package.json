@@ -32,7 +32,7 @@
     "build:prod": "npm run tsc-src -- --noEmit && tsup --tsconfig tsconfig-tsup.json",
     "build:doc": "npm run build:non-prod",
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
-    "prepack": "npmignore --ignore !/dist/ /.* *.iml"
+    "prepack": "npmignore --ignore !/dist/,/.*,/*.iml"
   },
   "devDependencies": {
     "copy-files-from-to": "^4.0.1"
