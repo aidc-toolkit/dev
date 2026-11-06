@@ -1,13 +1,13 @@
 import type { ConfigObject } from "@eslint/core";
-import js from "@eslint/js";
+import * as js from "@eslint/js";
 import stylistic from "@stylistic/eslint-plugin";
 import esLintConfigLove from "eslint-config-love";
-import jsdoc from "eslint-plugin-jsdoc";
-import { defineConfig } from "eslint/config";
-import tseslint from "typescript-eslint";
-import reactHooks from "eslint-plugin-react-hooks";
+import * as jsdoc from "eslint-plugin-jsdoc";
+import * as reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
+import { defineConfig } from "eslint/config";
 import globals from "globals";
+import * as tseslint from "typescript-eslint";
 
 /**
  * ESLint profiles.
