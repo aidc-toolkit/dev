@@ -26,10 +26,10 @@
   "scripts": {
     "lint": "eslint",
     "tsc-src": "tsc --project tsconfig-src.json",
-    "build:non-prod": "rimraf dist tsconfig-src.tsbuildinfo && npm run tsc-src -- --declarationMap --sourceMap",
+    "build:non-prod": "rimraf dist/index.cjs dist/index.d.cts && npm run tsc-src -- --declarationMap --sourceMap",
     "build:alpha": "npm run build:non-prod && tsc --project tsconfig-config.json --noEmit",
     "build:beta": "npm run build:non-prod",
-    "build:prod": "npm run tsc-src -- --noEmit && tsup --tsconfig tsconfig-tsup.json",
+    "build:prod": "npm run tsc-src -- --noEmit && tsup --tsconfig tsconfig-tsup.json && rimraf tsconfig-src.tsbuildinfo",
     "build:doc": "npm run build:non-prod",
     "copy-workflows": "copy-files-from-to --config copy-workflows.json",
     "prepack": "npmignore --ignore !/dist/,/.*,/*.iml"
