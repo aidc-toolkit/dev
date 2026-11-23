@@ -92,7 +92,6 @@ const overrideRecommendedConfig: ConfigObject = {
             ignoreStatic: true
         }],
 
-        "@stylistic/array-bracket-newline": ["error", "consistent"],
         "@stylistic/brace-style": ["error", "1tbs", {
             allowSingleLine: false
         }],
@@ -103,6 +102,13 @@ const overrideRecommendedConfig: ConfigObject = {
         }],
         "@stylistic/indent": ["error", 4],
         "@stylistic/indent-binary-ops": ["error", 4],
+        "@stylistic/list-style": ["error", {
+            empty: "never",
+            singleLine: {
+                spacing: "never",
+                maxItems: 20
+            }
+        }],
         "@stylistic/member-delimiter-style": ["error", {
             multiline: {
                 delimiter: "semi",
@@ -116,17 +122,6 @@ const overrideRecommendedConfig: ConfigObject = {
         "@stylistic/operator-linebreak": ["error", "after"],
         "@stylistic/quotes": ["error", "double"],
         "@stylistic/semi": ["error", "always"],
-        "@stylistic/object-curly-newline": ["error", {
-            ObjectExpression: {
-                multiline: true,
-                minProperties: 1
-            },
-            ObjectPattern: {
-                multiline: true,
-                minProperties: 1
-            }
-        }],
-        "@stylistic/object-property-newline": "error",
         "@stylistic/yield-star-spacing": ["error", {
             before: true,
             after: true
